@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.28)
 project(LLVMBrewer)
 
+option(BREWER_BUILD_EXAMPLE "Enable the example target" ON)
+option(BREWER_INSTALL "Enable the install targets" OFF)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -14,12 +17,22 @@ include_directories(${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 
-file(GLOB_RECURSE libbrewer-src lib/src/*.cpp lib/include/*.hpp)
-add_library(libbrewer STATIC ${libbrewer-src})
-target_include_directories(libbrewer PUBLIC lib/include)
-target_link_libraries(libbrewer PUBLIC ${LLVM_LIBRARY_DIRS}/LLVM-C.lib)
+file(GLOB_RECURSE brewer-src lib/src/*.cpp lib/include/*.hpp)
+add_library(brewer STATIC ${brewer-src})
+target_include_directories(brewer PUBLIC lib/include)
+target_link_libraries(brewer PUBLIC ${LLVM_LIBRARY_DIRS}/LLVM-C.lib)
 
-file(GLOB_RECURSE test-src test/src/*.cpp test/include/*.hpp)
-add_executable(test ${test-src})
-target_include_directories(test PRIVATE test/include)
-target_link_libraries(test PRIVATE libbrewer)
+if (${BREWER_INSTALL})
+    install(TARGETS brewer)
+endif ()
+
+if (${BREWER_BUILD_EXAMPLE})
+    file(GLOB_RECURSE example-src example/src/*.cpp example/include/*.hpp)
+    add_executable(example ${example-src})
+    target_include_directories(example PRIVATE example/include)
+    target_link_libraries(example PRIVATE brewer)
+
+    if (${BREWER_INSTALL})
+        install(TARGETS example)
+    endif ()
+endif ()

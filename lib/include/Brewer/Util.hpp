@@ -19,6 +19,16 @@ namespace Brewer
     }
 
     template <typename T>
+    T error(const char* format, ...)
+    {
+        va_list args;
+        va_start(args, format);
+        vfprintf(stderr, format, args);
+        va_end(args);
+        return {};
+    }
+
+    template <typename T>
     std::ostream& operator<<(std::ostream& stream, const std::vector<T>& v)
     {
         for (size_t i = 0; i < v.size(); ++i)
@@ -27,15 +37,5 @@ namespace Brewer
             stream << v[i];
         }
         return stream;
-    }
-
-    template <typename T>
-    T error(const char* format, ...)
-    {
-        va_list args;
-        va_start(args, format);
-        vfprintf(stderr, format, args);
-        va_end(args);
-        return {};
     }
 }

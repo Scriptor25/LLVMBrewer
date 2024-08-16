@@ -20,6 +20,18 @@ Brewer::Pipeline& Brewer::Pipeline::ParseExprFn(const std::string& beg, const st
     return *this;
 }
 
+Brewer::Pipeline& Brewer::Pipeline::GenBinaryFn(const std::string& operator_, const BinaryFn& fn)
+{
+    m_BinaryFns[operator_] = fn;
+    return *this;
+}
+
+Brewer::Pipeline& Brewer::Pipeline::GenUnaryFn(const std::string& operator_, const UnaryFn& fn)
+{
+    m_UnaryFns[operator_] = fn;
+    return *this;
+}
+
 Brewer::Pipeline& Brewer::Pipeline::DumpAST()
 {
     m_DumpAST = true;
@@ -59,6 +71,11 @@ void Brewer::Pipeline::ParseAndBuild()
         parser.ParseStmtFn(beg) = fn;
     for (const auto& [beg, fn] : m_ExprFns)
         parser.ParseExprFn(beg) = fn;
+
+    for (const auto& [op, fn] : m_BinaryFns)
+        builder.GenBinaryFn(op) = fn;
+    for (const auto& [op, fn] : m_UnaryFns)
+        builder.GenUnaryFn(op) = fn;
 
     while (!parser.AtEOF())
     {

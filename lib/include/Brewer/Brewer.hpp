@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 namespace Brewer
 {
     // Frontend
@@ -28,4 +30,9 @@ namespace Brewer
 
     // Pipeline
     class Pipeline;
+
+    typedef std::function<StmtPtr(Parser&)> StmtFn;
+    typedef std::function<ExprPtr(Parser&)> ExprFn;
+    typedef std::function<ValuePtr(Builder&, const ValuePtr&, const ValuePtr&)> BinaryFn;
+    typedef std::function<ValuePtr(Builder&, const ValuePtr&)> UnaryFn;
 }

@@ -24,45 +24,31 @@ Brewer::ValuePtr Brewer::UnaryExpression::GenIR(Builder& builder) const
     const auto operand = Operand->GenIR(builder);
     if (!operand) return {};
 
-    ValuePtr result;
-    bool assign = false;
-    if (Operator == "++")
+    if (const auto& fn = builder.GenUnaryFn(Operator))
     {
-        const auto one = LLVMConstInt(operand->GetIRType(), 1, true);
-        result = builder.GenAdd(operand, RValue::Direct(builder, operand->GetType(), one));
-        assign = true;
-    }
-    else if (Operator == "--")
-    {
-        const auto one = LLVMConstInt(operand->GetIRType(), 1, true);
-        result = builder.GenSub(operand, RValue::Direct(builder, operand->GetType(), one));
-        assign = true;
-    }
-    else if (Operator == "-") result = builder.GenNeg(operand);
-    else if (Operator == "!") result = builder.GenLNot(operand);
-    else if (Operator == "~") result = builder.GenNot(operand);
-
-    if (result)
-    {
-        if (assign)
+        const bool assign = Operator == "++" || Operator == "--";
+        if (auto result = fn(builder, operand))
         {
-            if (auto dest = std::dynamic_pointer_cast<LValue>(operand))
+            if (assign)
             {
-                LLVMValueRef pre = {};
-                if (!LH) pre = dest->Get();
-                dest->Set(result->Get());
-                if (LH) return dest;
-                return RValue::Direct(builder, operand->GetType(), pre);
-            }
+                if (auto dest = std::dynamic_pointer_cast<LValue>(operand))
+                {
+                    LLVMValueRef pre;
+                    if (!LH) pre = dest->Get();
+                    dest->Set(result->Get());
+                    if (LH) return dest;
+                    return RValue::Direct(builder, operand->GetType(), pre);
+                }
 
-            result->Erase();
-            operand->Erase();
-            return error<ValuePtr>("at %s(%llu,%llu): cannot assign to rvalue\n",
-                                   Location.Filename.c_str(),
-                                   Location.Row,
-                                   Location.Column);
+                result->Erase();
+                operand->Erase();
+                return error<ValuePtr>("at %s(%llu,%llu): cannot assign to rvalue\n",
+                                       Location.Filename.c_str(),
+                                       Location.Row,
+                                       Location.Column);
+            }
+            return result;
         }
-        return result;
     }
 
     operand->Erase();

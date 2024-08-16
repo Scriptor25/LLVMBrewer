@@ -12,12 +12,42 @@ namespace Brewer
     class Builder
     {
     public:
+        static ValuePtr GenEQ(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenNE(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenLT(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenGT(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenLE(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenGE(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenLAnd(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenLOr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenLXor(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenAdd(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenSub(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenMul(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenDiv(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenRem(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenAnd(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenOr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenXor(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenShl(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenShr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenAShr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+
+        static ValuePtr GenInc(Builder&, const ValuePtr& val);
+        static ValuePtr GenDec(Builder&, const ValuePtr& val);
+        static ValuePtr GenNeg(Builder&, const ValuePtr& val);
+        static ValuePtr GenLNot(Builder&, const ValuePtr& val);
+        static ValuePtr GenNot(Builder&, const ValuePtr& val);
+
         Builder(const std::string& module_id, const std::string& filename);
         ~Builder();
 
         [[nodiscard]] const LLVMContextRef& Context() const;
         [[nodiscard]] const LLVMBuilderRef& IRBuilder() const;
         [[nodiscard]] const LLVMModuleRef& Module() const;
+
+        BinaryFn& GenBinaryFn(const std::string& operator_);
+        UnaryFn& GenUnaryFn(const std::string& operator_);
 
         void Close() const;
 
@@ -28,39 +58,16 @@ namespace Brewer
         void Pop();
         ValuePtr& operator[](const std::string& name);
 
-        ValuePtr GenEQ(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenNE(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenLT(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenGT(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenLE(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenGE(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenLAnd(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenLOr(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenLXor(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenAdd(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenSub(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenMul(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenDiv(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenRem(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenAnd(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenOr(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenXor(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenShl(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenShr(const ValuePtr& lhs, const ValuePtr& rhs);
-        ValuePtr GenAShr(const ValuePtr& lhs, const ValuePtr& rhs);
-
-        ValuePtr GenNeg(const ValuePtr& val);
-        ValuePtr GenLNot(const ValuePtr& val);
-        ValuePtr GenNot(const ValuePtr& val);
-
         ValuePtr GenCast(const ValuePtr& value, const TypePtr& type);
 
     private:
         LLVMContextRef m_Context;
         LLVMBuilderRef m_IRBuilder;
         LLVMModuleRef m_Module;
-
         LLVMValueRef m_Global;
+
+        std::map<std::string, BinaryFn> m_BinaryFns;
+        std::map<std::string, UnaryFn> m_UnaryFns;
 
         std::vector<std::map<std::string, ValuePtr>> m_Stack;
         std::map<std::string, ValuePtr> m_Values;

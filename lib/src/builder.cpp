@@ -6,6 +6,309 @@
 #include <llvm-c/Target.h>
 #include <llvm-c/TargetMachine.h>
 
+Brewer::ValuePtr Brewer::Builder::GenEQ(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto type = lhs->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildICmp(builder.IRBuilder(), LLVMIntEQ, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFCmp(builder.IRBuilder(), LLVMRealOEQ, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenNE(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto type = lhs->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildICmp(builder.IRBuilder(), LLVMIntNE, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFCmp(builder.IRBuilder(), LLVMRealONE, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenLT(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto type = lhs->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildICmp(builder.IRBuilder(), LLVMIntSLT, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFCmp(builder.IRBuilder(), LLVMRealOLT, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenGT(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto type = lhs->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildICmp(builder.IRBuilder(), LLVMIntSGT, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFCmp(builder.IRBuilder(), LLVMRealOGT, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenLE(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto type = lhs->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildICmp(builder.IRBuilder(), LLVMIntSLE, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFCmp(builder.IRBuilder(), LLVMRealOLE, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenGE(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto type = lhs->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildICmp(builder.IRBuilder(), LLVMIntSGE, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFCmp(builder.IRBuilder(), LLVMRealOGE, lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, Type::Get("i1"), result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenLAnd(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto l = LLVMBuildIsNotNull(builder.IRBuilder(), lhs->Get(), "");
+    const auto r = LLVMBuildIsNotNull(builder.IRBuilder(), rhs->Get(), "");
+
+    const auto result = LLVMBuildAnd(builder.IRBuilder(), l, r, "");
+    return RValue::Direct(builder, Type::Get("i1"), result);
+}
+
+Brewer::ValuePtr Brewer::Builder::GenLOr(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto l = LLVMBuildIsNotNull(builder.IRBuilder(), lhs->Get(), "");
+    const auto r = LLVMBuildIsNotNull(builder.IRBuilder(), rhs->Get(), "");
+
+    const auto result = LLVMBuildOr(builder.IRBuilder(), l, r, "");
+    return RValue::Direct(builder, Type::Get("i1"), result);
+}
+
+Brewer::ValuePtr Brewer::Builder::GenLXor(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto l = LLVMBuildIsNotNull(builder.IRBuilder(), lhs->Get(), "");
+    const auto r = LLVMBuildIsNotNull(builder.IRBuilder(), rhs->Get(), "");
+
+    const auto result = LLVMBuildXor(builder.IRBuilder(), l, r, "");
+    return RValue::Direct(builder, Type::Get("i1"), result);
+}
+
+Brewer::ValuePtr Brewer::Builder::GenAdd(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto type = lhs->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildAdd(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFAdd(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenSub(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto type = lhs->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildSub(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFSub(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenMul(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto type = lhs->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildMul(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFMul(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenDiv(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto type = lhs->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildSDiv(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFDiv(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenRem(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto type = lhs->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildSRem(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFRem(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenAnd(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto result = LLVMBuildAnd(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+    return RValue::Direct(builder, lhs->GetType(), result);
+}
+
+Brewer::ValuePtr Brewer::Builder::GenOr(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto result = LLVMBuildOr(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+    return RValue::Direct(builder, lhs->GetType(), result);
+}
+
+Brewer::ValuePtr Brewer::Builder::GenXor(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto result = LLVMBuildXor(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+    return RValue::Direct(builder, lhs->GetType(), result);
+}
+
+Brewer::ValuePtr Brewer::Builder::GenShl(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto result = LLVMBuildShl(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+    return RValue::Direct(builder, lhs->GetType(), result);
+}
+
+Brewer::ValuePtr Brewer::Builder::GenShr(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto result = LLVMBuildLShr(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+    return RValue::Direct(builder, lhs->GetType(), result);
+}
+
+Brewer::ValuePtr Brewer::Builder::GenAShr(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+{
+    const auto result = LLVMBuildAShr(builder.IRBuilder(), lhs->Get(), rhs->Get(), "");
+    return RValue::Direct(builder, lhs->GetType(), result);
+}
+
+Brewer::ValuePtr Brewer::Builder::GenInc(Builder& builder, const ValuePtr& val)
+{
+    const auto one = LLVMConstInt(val->GetIRType(), 1, true);
+    return builder.GenBinaryFn("+")(builder, val, RValue::Direct(builder, val->GetType(), one));
+}
+
+Brewer::ValuePtr Brewer::Builder::GenDec(Builder& builder, const ValuePtr& val)
+{
+    const auto one = LLVMConstInt(val->GetIRType(), 1, true);
+    return builder.GenBinaryFn("-")(builder, val, RValue::Direct(builder, val->GetType(), one));
+}
+
+Brewer::ValuePtr Brewer::Builder::GenNeg(Builder& builder, const ValuePtr& val)
+{
+    const auto type = val->GetType();
+
+    if (type->IsInt())
+    {
+        const auto result = LLVMBuildNeg(builder.IRBuilder(), val->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+    if (type->IsFloat())
+    {
+        const auto result = LLVMBuildFNeg(builder.IRBuilder(), val->Get(), "");
+        return RValue::Direct(builder, type, result);
+    }
+
+    return {};
+}
+
+Brewer::ValuePtr Brewer::Builder::GenLNot(Builder& builder, const ValuePtr& val)
+{
+    const auto result = LLVMBuildIsNull(builder.IRBuilder(), val->Get(), "");
+    return RValue::Direct(builder, Type::Get("i1"), result);
+}
+
+Brewer::ValuePtr Brewer::Builder::GenNot(Builder& builder, const ValuePtr& val)
+{
+    const auto result = LLVMBuildNot(builder.IRBuilder(), val->Get(), "");
+    return RValue::Direct(builder, val->GetType(), result);
+}
+
 Brewer::Builder::Builder(const std::string& module_id, const std::string& filename)
 {
     m_Context = LLVMContextCreate();
@@ -17,6 +320,31 @@ Brewer::Builder::Builder(const std::string& module_id, const std::string& filena
     m_Global = LLVMAddFunction(m_Module, "main", ft);
     const auto bb = LLVMAppendBasicBlock(m_Global, "entry");
     LLVMPositionBuilderAtEnd(m_IRBuilder, bb);
+
+    m_BinaryFns["=="] = GenEQ;
+    m_BinaryFns["!="] = GenNE;
+    m_BinaryFns["<"] = GenLT;
+    m_BinaryFns[">"] = GenGT;
+    m_BinaryFns["<="] = GenLE;
+    m_BinaryFns[">="] = GenGE;
+    m_BinaryFns["&&"] = GenLAnd;
+    m_BinaryFns["||"] = GenLOr;
+    m_BinaryFns["^^"] = GenLXor;
+    m_BinaryFns["+"] = GenAdd;
+    m_BinaryFns["-"] = GenSub;
+    m_BinaryFns["*"] = GenMul;
+    m_BinaryFns["/"] = GenDiv;
+    m_BinaryFns["%"] = GenRem;
+    m_BinaryFns["&"] = GenAnd;
+    m_BinaryFns["|"] = GenOr;
+    m_BinaryFns["^"] = GenXor;
+    m_BinaryFns["<<"] = GenShl;
+    m_BinaryFns[">>"] = GenShr;
+    m_BinaryFns[">>>"] = GenAShr;
+
+    m_UnaryFns["-"] = GenNeg;
+    m_UnaryFns["!"] = GenLNot;
+    m_UnaryFns["~"] = GenNot;
 }
 
 Brewer::Builder::~Builder()
@@ -39,6 +367,16 @@ const LLVMBuilderRef& Brewer::Builder::IRBuilder() const
 const LLVMModuleRef& Brewer::Builder::Module() const
 {
     return m_Module;
+}
+
+Brewer::BinaryFn& Brewer::Builder::GenBinaryFn(const std::string& operator_)
+{
+    return m_BinaryFns[operator_];
+}
+
+Brewer::UnaryFn& Brewer::Builder::GenUnaryFn(const std::string& operator_)
+{
+    return m_UnaryFns[operator_];
 }
 
 void Brewer::Builder::Close() const
@@ -105,297 +443,6 @@ void Brewer::Builder::Pop()
 Brewer::ValuePtr& Brewer::Builder::operator[](const std::string& name)
 {
     return m_Values[name];
-}
-
-Brewer::ValuePtr Brewer::Builder::GenEQ(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto type = lhs->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildICmp(m_IRBuilder, LLVMIntEQ, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFCmp(m_IRBuilder, LLVMRealOEQ, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenNE(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto type = lhs->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildICmp(m_IRBuilder, LLVMIntNE, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFCmp(m_IRBuilder, LLVMRealONE, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenLT(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto type = lhs->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildICmp(m_IRBuilder, LLVMIntSLT, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFCmp(m_IRBuilder, LLVMRealOLT, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenGT(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto type = lhs->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildICmp(m_IRBuilder, LLVMIntSGT, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFCmp(m_IRBuilder, LLVMRealOGT, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenLE(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto type = lhs->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildICmp(m_IRBuilder, LLVMIntSLE, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFCmp(m_IRBuilder, LLVMRealOLE, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenGE(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto type = lhs->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildICmp(m_IRBuilder, LLVMIntSGE, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFCmp(m_IRBuilder, LLVMRealOGE, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, Type::Get("i1"), result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenLAnd(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto l = LLVMBuildIsNotNull(m_IRBuilder, lhs->Get(), "");
-    const auto r = LLVMBuildIsNotNull(m_IRBuilder, rhs->Get(), "");
-
-    const auto result = LLVMBuildAnd(m_IRBuilder, l, r, "");
-    return RValue::Direct(*this, Type::Get("i1"), result);
-}
-
-Brewer::ValuePtr Brewer::Builder::GenLOr(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto l = LLVMBuildIsNotNull(m_IRBuilder, lhs->Get(), "");
-    const auto r = LLVMBuildIsNotNull(m_IRBuilder, rhs->Get(), "");
-
-    const auto result = LLVMBuildOr(m_IRBuilder, l, r, "");
-    return RValue::Direct(*this, Type::Get("i1"), result);
-}
-
-Brewer::ValuePtr Brewer::Builder::GenLXor(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto l = LLVMBuildIsNotNull(m_IRBuilder, lhs->Get(), "");
-    const auto r = LLVMBuildIsNotNull(m_IRBuilder, rhs->Get(), "");
-
-    const auto result = LLVMBuildXor(m_IRBuilder, l, r, "");
-    return RValue::Direct(*this, Type::Get("i1"), result);
-}
-
-Brewer::ValuePtr Brewer::Builder::GenAdd(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto type = lhs->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildAdd(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFAdd(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenSub(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto type = lhs->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildSub(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFSub(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenMul(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto type = lhs->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildMul(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFMul(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenDiv(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto type = lhs->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildSDiv(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFDiv(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenRem(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto type = lhs->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildSRem(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFRem(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenAnd(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto result = LLVMBuildAnd(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-    return RValue::Direct(*this, lhs->GetType(), result);
-}
-
-Brewer::ValuePtr Brewer::Builder::GenOr(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto result = LLVMBuildOr(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-    return RValue::Direct(*this, lhs->GetType(), result);
-}
-
-Brewer::ValuePtr Brewer::Builder::GenXor(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto result = LLVMBuildXor(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-    return RValue::Direct(*this, lhs->GetType(), result);
-}
-
-Brewer::ValuePtr Brewer::Builder::GenShl(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto result = LLVMBuildShl(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-    return RValue::Direct(*this, lhs->GetType(), result);
-}
-
-Brewer::ValuePtr Brewer::Builder::GenShr(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto result = LLVMBuildLShr(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-    return RValue::Direct(*this, lhs->GetType(), result);
-}
-
-Brewer::ValuePtr Brewer::Builder::GenAShr(const ValuePtr& lhs, const ValuePtr& rhs)
-{
-    const auto result = LLVMBuildAShr(m_IRBuilder, lhs->Get(), rhs->Get(), "");
-    return RValue::Direct(*this, lhs->GetType(), result);
-}
-
-Brewer::ValuePtr Brewer::Builder::GenNeg(const ValuePtr& val)
-{
-    const auto type = val->GetType();
-
-    if (type->IsInt())
-    {
-        const auto result = LLVMBuildNeg(m_IRBuilder, val->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-    if (type->IsFloat())
-    {
-        const auto result = LLVMBuildFNeg(m_IRBuilder, val->Get(), "");
-        return RValue::Direct(*this, type, result);
-    }
-
-    return {};
-}
-
-Brewer::ValuePtr Brewer::Builder::GenLNot(const ValuePtr& val)
-{
-    const auto result = LLVMBuildIsNull(m_IRBuilder, val->Get(), "");
-    return RValue::Direct(*this, Type::Get("i1"), result);
-}
-
-Brewer::ValuePtr Brewer::Builder::GenNot(const ValuePtr& val)
-{
-    const auto result = LLVMBuildNot(m_IRBuilder, val->Get(), "");
-    return RValue::Direct(*this, val->GetType(), result);
 }
 
 Brewer::ValuePtr Brewer::Builder::GenCast(const ValuePtr& value, const TypePtr& type)

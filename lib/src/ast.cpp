@@ -1,7 +1,7 @@
 #include <Brewer/AST.hpp>
 
-Brewer::Statement::Statement(const SourceLocation& loc)
-    : Location(loc)
+Brewer::Statement::Statement(SourceLocation loc)
+    : Location(std::move(loc))
 {
 }
 

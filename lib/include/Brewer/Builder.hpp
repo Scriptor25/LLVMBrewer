@@ -12,7 +12,7 @@ namespace Brewer
     class Builder
     {
     public:
-        explicit Builder(const std::string& name);
+        Builder(const std::string& module_id, const std::string& filename);
         ~Builder();
 
         [[nodiscard]] const LLVMContextRef& Context() const;
@@ -28,26 +28,30 @@ namespace Brewer
         void Pop();
         ValuePtr& operator[](const std::string& name);
 
-        [[nodiscard]] ValuePtr GenEQ(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenNE(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenLT(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenGT(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenLE(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenGE(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenLAnd(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenLOr(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenLXor(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenAdd(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenSub(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenMul(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenDiv(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenRem(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenAnd(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenOr(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenXor(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenShl(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenShr(const ValuePtr& lhs, const ValuePtr& rhs) const;
-        [[nodiscard]] ValuePtr GenAShr(const ValuePtr& lhs, const ValuePtr& rhs) const;
+        ValuePtr GenEQ(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenNE(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenLT(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenGT(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenLE(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenGE(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenLAnd(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenLOr(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenLXor(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenAdd(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenSub(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenMul(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenDiv(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenRem(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenAnd(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenOr(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenXor(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenShl(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenShr(const ValuePtr& lhs, const ValuePtr& rhs);
+        ValuePtr GenAShr(const ValuePtr& lhs, const ValuePtr& rhs);
+
+        ValuePtr GenNeg(const ValuePtr& val);
+        ValuePtr GenLNot(const ValuePtr& val);
+        ValuePtr GenNot(const ValuePtr& val);
 
         ValuePtr GenCast(const ValuePtr& value, const TypePtr& type);
 

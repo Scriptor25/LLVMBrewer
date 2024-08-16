@@ -1,9 +1,14 @@
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <vector>
 #include <Brewer/AST.hpp>
 #include <Brewer/Builder.hpp>
 #include <Brewer/Parser.hpp>
+#include <Brewer/Pipeline.hpp>
 #include <Brewer/Type.hpp>
+#include <Brewer/Util.hpp>
 #include <Brewer/Value.hpp>
 #include <llvm-c/Core.h>
 
@@ -14,24 +19,25 @@ struct Prototype
     {
     }
 
-    LLVMValueRef GenIR(Brewer::Builder& builder) const
-    {
-        const auto ft = GetType()->GenIR(builder);
-        const auto f = LLVMAddFunction(builder.Module(), Name.c_str(), ft);
-        if (!f)
-            return {};
-
-        for (size_t i = 0; i < LLVMCountParams(f); ++i)
-            LLVMSetValueName(LLVMGetParam(f, i), Params[i].c_str());
-
-        builder[Name] = Brewer::RValue::Direct(Brewer::PointerType::Get(GetType()), f);
-        return f;
-    }
-
     std::ostream& Dump(std::ostream& stream) const
     {
         using namespace Brewer;
         return stream << Name << '(' << Params << ')';
+    }
+
+    LLVMValueRef GenIR(Brewer::Builder& builder) const
+    {
+        auto f = LLVMGetNamedFunction(builder.Module(), Name.c_str());
+        if (f) return f;
+
+        f = LLVMAddFunction(builder.Module(), Name.c_str(), GetType()->GenIR(builder));
+        if (!f) return {};
+
+        for (size_t i = 0; i < LLVMCountParams(f); ++i)
+            LLVMSetValueName(LLVMGetParam(f, i), Params[i].c_str());
+
+        builder[Name] = Brewer::RValue::Direct(builder, Brewer::PointerType::Get(GetType()), f);
+        return f;
     }
 
     [[nodiscard]] Brewer::TypePtr GetType() const
@@ -58,15 +64,15 @@ struct FunctionStatement : Brewer::Statement
     {
     }
 
+    std::ostream& Dump(std::ostream& stream) const override
+    {
+        return stream << "def " << Proto << ' ' << Body;
+    }
+
     Brewer::ValuePtr GenIR(Brewer::Builder& builder) const override
     {
-        auto f = LLVMGetNamedFunction(builder.Module(), Proto.Name.c_str());
-        if (!f)
-        {
-            f = Proto.GenIR(builder);
-            if (!f) return {};
-        }
-        if (LLVMCountBasicBlocks(f)) return {};
+        const auto f = Proto.GenIR(builder);
+        if (!f || LLVMCountBasicBlocks(f)) return {};
 
         const auto bb = LLVMAppendBasicBlockInContext(builder.Context(), f, "entry");
         const auto bkp = LLVMGetInsertBlock(builder.IRBuilder());
@@ -77,20 +83,22 @@ struct FunctionStatement : Brewer::Statement
         {
             const auto name = Proto.Params[i];
             const auto param = LLVMGetParam(f, i);
-            builder[name] = Brewer::RValue::Direct(Brewer::Type::Get("f64"), param);
+            builder[name] = Brewer::RValue::Direct(builder, Brewer::Type::Get("f64"), param);
         }
 
-        const auto retval = Body->GenIR(builder);
-        LLVMBuildRet(builder.IRBuilder(), retval->Get());
+        const auto return_value = Body->GenIR(builder);
+        if (!return_value)
+        {
+            builder.Pop();
+            LLVMPositionBuilderAtEnd(builder.IRBuilder(), bkp);
+            LLVMRemoveBasicBlockFromParent(bb);
+            return {};
+        }
+
+        LLVMBuildRet(builder.IRBuilder(), return_value->Get());
         builder.Pop();
-
         LLVMPositionBuilderAtEnd(builder.IRBuilder(), bkp);
-        return Brewer::RValue::Direct(Brewer::PointerType::Get(Proto.GetType()), f);
-    }
-
-    std::ostream& Dump(std::ostream& stream) const override
-    {
-        return stream << "def " << Proto << ' ' << Body;
+        return Brewer::RValue::Direct(builder, Brewer::PointerType::Get(Proto.GetType()), f);
     }
 
     Prototype Proto;
@@ -104,17 +112,16 @@ struct ExternStatement : Brewer::Statement
     {
     }
 
-    Brewer::ValuePtr GenIR(Brewer::Builder& builder) const override
-    {
-        if (LLVMGetNamedFunction(builder.Module(), Proto.Name.c_str()))
-            return {};
-        Proto.GenIR(builder);
-        return {};
-    }
-
     std::ostream& Dump(std::ostream& stream) const override
     {
         return stream << "extern " << Proto;
+    }
+
+    Brewer::ValuePtr GenIR(Brewer::Builder& builder) const override
+    {
+        const auto f = Proto.GenIR(builder);
+        if (!f) return {};
+        return Brewer::RValue::Direct(builder, Brewer::PointerType::Get(Proto.GetType()), f);
     }
 
     Prototype Proto;
@@ -130,46 +137,71 @@ struct IfExpression : Brewer::Expression
     {
     }
 
+    std::ostream& Dump(std::ostream& stream) const override
+    {
+        return stream << "if " << Condition << " then " << Then << " else " << Else;
+    }
+
     Brewer::ValuePtr GenIR(Brewer::Builder& builder) const override
     {
-        const auto f = LLVMGetBasicBlockParent(LLVMGetInsertBlock(builder.IRBuilder()));
-        auto thenbb = LLVMAppendBasicBlockInContext(builder.Context(), f, "then");
-        auto elsebb = LLVMAppendBasicBlockInContext(builder.Context(), f, "else");
-        const auto endbb = LLVMAppendBasicBlockInContext(builder.Context(), f, "end");
+        const auto bkp = LLVMGetInsertBlock(builder.IRBuilder());
+        const auto f = LLVMGetBasicBlockParent(bkp);
+        auto then_bb = LLVMAppendBasicBlockInContext(builder.Context(), f, "then");
+        auto else_bb = LLVMAppendBasicBlockInContext(builder.Context(), f, "else");
+        const auto end_bb = LLVMAppendBasicBlockInContext(builder.Context(), f, "end");
 
         const auto condition = Condition->GenIR(builder);
-        LLVMBuildCondBr(builder.IRBuilder(), condition->Get(), thenbb, elsebb);
+        if (!condition)
+        {
+            LLVMPositionBuilderAtEnd(builder.IRBuilder(), bkp);
+            LLVMRemoveBasicBlockFromParent(then_bb);
+            LLVMRemoveBasicBlockFromParent(else_bb);
+            LLVMRemoveBasicBlockFromParent(end_bb);
+            return {};
+        }
+        LLVMBuildCondBr(builder.IRBuilder(), condition->Get(), then_bb, else_bb);
 
-        LLVMPositionBuilderAtEnd(builder.IRBuilder(), thenbb);
+        LLVMPositionBuilderAtEnd(builder.IRBuilder(), then_bb);
         const auto then = Then->GenIR(builder);
-        thenbb = LLVMGetInsertBlock(builder.IRBuilder());
+        if (!then)
+        {
+            LLVMPositionBuilderAtEnd(builder.IRBuilder(), bkp);
+            LLVMRemoveBasicBlockFromParent(then_bb);
+            LLVMRemoveBasicBlockFromParent(else_bb);
+            LLVMRemoveBasicBlockFromParent(end_bb);
+            return {};
+        }
+        then_bb = LLVMGetInsertBlock(builder.IRBuilder());
 
-        LLVMPositionBuilderAtEnd(builder.IRBuilder(), elsebb);
+        LLVMPositionBuilderAtEnd(builder.IRBuilder(), else_bb);
         const auto else_ = Else->GenIR(builder);
-        elsebb = LLVMGetInsertBlock(builder.IRBuilder());
+        if (!else_)
+        {
+            LLVMPositionBuilderAtEnd(builder.IRBuilder(), bkp);
+            LLVMRemoveBasicBlockFromParent(then_bb);
+            LLVMRemoveBasicBlockFromParent(else_bb);
+            LLVMRemoveBasicBlockFromParent(end_bb);
+            return {};
+        }
+        else_bb = LLVMGetInsertBlock(builder.IRBuilder());
 
         const auto type = Brewer::Type::GetHigherOrder(then->GetType(), else_->GetType());
         const auto ty = type->GenIR(builder);
 
-        LLVMPositionBuilderAtEnd(builder.IRBuilder(), thenbb);
-        auto thenv = builder.GenCast(then, type)->Get();
-        LLVMBuildBr(builder.IRBuilder(), endbb);
+        LLVMPositionBuilderAtEnd(builder.IRBuilder(), then_bb);
+        auto then_result = builder.GenCast(then, type)->Get();
+        LLVMBuildBr(builder.IRBuilder(), end_bb);
 
-        LLVMPositionBuilderAtEnd(builder.IRBuilder(), elsebb);
-        auto elsev = builder.GenCast(else_, type)->Get();
-        LLVMBuildBr(builder.IRBuilder(), endbb);
+        LLVMPositionBuilderAtEnd(builder.IRBuilder(), else_bb);
+        auto else_result = builder.GenCast(else_, type)->Get();
+        LLVMBuildBr(builder.IRBuilder(), end_bb);
 
-        LLVMPositionBuilderAtEnd(builder.IRBuilder(), endbb);
+        LLVMPositionBuilderAtEnd(builder.IRBuilder(), end_bb);
         const auto phi = LLVMBuildPhi(builder.IRBuilder(), ty, "");
-        LLVMAddIncoming(phi, &thenv, &thenbb, 1);
-        LLVMAddIncoming(phi, &elsev, &elsebb, 1);
+        LLVMAddIncoming(phi, &then_result, &then_bb, 1);
+        LLVMAddIncoming(phi, &else_result, &else_bb, 1);
 
-        return Brewer::RValue::Direct(then->GetType(), phi);
-    }
-
-    std::ostream& Dump(std::ostream& stream) const override
-    {
-        return stream << "if " << Condition << " then " << Then << " else " << Else;
+        return Brewer::RValue::Direct(builder, then->GetType(), phi);
     }
 
     Brewer::ExprPtr Condition;
@@ -180,7 +212,6 @@ struct IfExpression : Brewer::Expression
 static Prototype parse_proto(Brewer::Parser& p)
 {
     auto [Location, Type, Value] = p.Expect(Brewer::TokenType_Name);
-
     std::vector<std::string> params;
     p.Expect("(");
     while (!p.NextIfAt(")"))
@@ -188,7 +219,6 @@ static Prototype parse_proto(Brewer::Parser& p)
         auto param = p.Expect(Brewer::TokenType_Name).Value;
         params.push_back(param);
     }
-
     return {Value, params};
 }
 
@@ -197,7 +227,6 @@ static Brewer::StmtPtr parse_def(Brewer::Parser& p)
     auto [Location, Type, Value] = p.Expect("def");
     auto proto = parse_proto(p);
     auto body = p.ParseExpr();
-
     return std::make_unique<FunctionStatement>(Location, proto, std::move(body));
 }
 
@@ -228,6 +257,13 @@ int main(const int argc, const char** argv)
         return 1;
     }
 
+    const std::string input_filename = argv[1];
+    const std::string output_filename = argv[2];
+    const auto module_id = std::filesystem::path(argv[1])
+                           .replace_extension()
+                           .filename()
+                           .string();
+
     std::ifstream stream(argv[1]);
     if (!stream)
     {
@@ -235,23 +271,15 @@ int main(const int argc, const char** argv)
         return 1;
     }
 
-    Brewer::Parser parser(stream, argv[1]);
-    parser.ParseStmtFn("def") = parse_def;
-    parser.ParseStmtFn("extern") = parse_extern;
-    parser.ParseExprFn("if") = parse_if;
-
-    Brewer::Builder builder(argv[1]);
-
-    while (!parser.AtEOF())
-    {
-        auto ptr = parser.Parse();
-        std::cout << ptr << std::endl;
-        ptr->GenIR(builder);
-    }
-
-    builder.Close();
-    builder.Dump();
-    builder.EmitToFile(argv[2]);
+    Brewer::Pipeline(stream, input_filename)
+        .ParseStmtFn("def", parse_def)
+        .ParseStmtFn("extern", parse_extern)
+        .ParseExprFn("if", parse_if)
+        .DumpAST()
+        .ModuleID(module_id)
+        .DumpIR()
+        .Build();
+    //.BuildAndEmit(output_filename);
 
     return 0;
 }

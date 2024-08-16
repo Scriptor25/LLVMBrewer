@@ -11,11 +11,11 @@ namespace Brewer
 {
     struct Statement
     {
-        explicit Statement(const SourceLocation& loc);
+        explicit Statement(SourceLocation loc);
 
         virtual ~Statement();
-        virtual ValuePtr GenIR(Builder&) const = 0;
         virtual std::ostream& Dump(std::ostream&) const = 0;
+        virtual ValuePtr GenIR(Builder&) const = 0;
 
         SourceLocation Location;
     };
@@ -27,12 +27,12 @@ namespace Brewer
 
     struct BinaryExpression : Expression
     {
-        BinaryExpression(const SourceLocation& loc, std::string op, ExprPtr lhs, ExprPtr rhs);
+        BinaryExpression(const SourceLocation& loc, std::string operator_, ExprPtr lhs, ExprPtr rhs);
 
-        ValuePtr GenIR(Builder&) const override;
         std::ostream& Dump(std::ostream&) const override;
+        ValuePtr GenIR(Builder&) const override;
 
-        std::string Op;
+        std::string Operator;
         ExprPtr LHS;
         ExprPtr RHS;
     };
@@ -41,8 +41,8 @@ namespace Brewer
     {
         CallExpression(const SourceLocation& loc, ExprPtr callee, std::vector<ExprPtr>& args);
 
-        ValuePtr GenIR(Builder&) const override;
         std::ostream& Dump(std::ostream&) const override;
+        ValuePtr GenIR(Builder&) const override;
 
         ExprPtr Callee;
         std::vector<ExprPtr> Args;
@@ -52,8 +52,8 @@ namespace Brewer
     {
         ConstCharExpression(const SourceLocation& loc, char value);
 
-        ValuePtr GenIR(Builder&) const override;
         std::ostream& Dump(std::ostream&) const override;
+        ValuePtr GenIR(Builder&) const override;
 
         char Value;
     };
@@ -62,8 +62,8 @@ namespace Brewer
     {
         ConstFloatExpression(const SourceLocation& loc, double value);
 
-        ValuePtr GenIR(Builder&) const override;
         std::ostream& Dump(std::ostream&) const override;
+        ValuePtr GenIR(Builder&) const override;
 
         double Value;
     };
@@ -72,8 +72,8 @@ namespace Brewer
     {
         ConstIntExpression(const SourceLocation& loc, unsigned long long value);
 
-        ValuePtr GenIR(Builder&) const override;
         std::ostream& Dump(std::ostream&) const override;
+        ValuePtr GenIR(Builder&) const override;
 
         unsigned long long Value;
     };
@@ -82,8 +82,8 @@ namespace Brewer
     {
         ConstStringExpression(const SourceLocation& loc, std::string value);
 
-        ValuePtr GenIR(Builder&) const override;
         std::ostream& Dump(std::ostream&) const override;
+        ValuePtr GenIR(Builder&) const override;
 
         std::string Value;
     };
@@ -92,8 +92,8 @@ namespace Brewer
     {
         IndexExpression(const SourceLocation& loc, ExprPtr base, ExprPtr index);
 
-        ValuePtr GenIR(Builder&) const override;
         std::ostream& Dump(std::ostream&) const override;
+        ValuePtr GenIR(Builder&) const override;
 
         ExprPtr Base;
         ExprPtr Index;
@@ -101,37 +101,26 @@ namespace Brewer
 
     struct SymbolExpression : Expression
     {
-        SymbolExpression(const SourceLocation& loc, const std::string& name);
+        SymbolExpression(const SourceLocation& loc, std::string name);
 
-        ValuePtr GenIR(Builder&) const override;
         std::ostream& Dump(std::ostream&) const override;
+        ValuePtr GenIR(Builder&) const override;
 
         std::string Name;
     };
 
     struct UnaryExpression : Expression
     {
-        UnaryExpression(const SourceLocation& loc, std::string op, ExprPtr operand, bool lh);
+        UnaryExpression(const SourceLocation& loc, std::string operator_, ExprPtr operand, bool lh);
 
-        ValuePtr GenIR(Builder&) const override;
         std::ostream& Dump(std::ostream&) const override;
+        ValuePtr GenIR(Builder&) const override;
 
-        std::string Op;
+        std::string Operator;
         ExprPtr Operand;
         bool LH;
     };
 
     std::ostream& operator<<(std::ostream&, const StmtPtr&);
     std::ostream& operator<<(std::ostream&, const ExprPtr&);
-
-    template <typename T>
-    std::ostream& operator<<(std::ostream& stream, const std::vector<T>& v)
-    {
-        for (size_t i = 0; i < v.size(); ++i)
-        {
-            if (i > 0) stream << ", ";
-            stream << v[i];
-        }
-        return stream;
-    }
 }

@@ -8,23 +8,29 @@ namespace Brewer
     class Value
     {
     public:
-        explicit Value(TypePtr type);
+        explicit Value(Builder&, TypePtr type);
+        [[nodiscard]] Builder& GetBuilder() const;
         TypePtr GetType();
+        [[nodiscard]] LLVMTypeRef GetIRType() const;
 
         virtual ~Value();
-        virtual LLVMValueRef Get() = 0;
+        [[nodiscard]] virtual LLVMValueRef Get() const = 0;
+        virtual void Erase() const = 0;
 
     private:
+        Builder& m_Builder;
         TypePtr m_Type;
+        LLVMTypeRef m_IRType;
     };
 
     class RValue : public Value
     {
     public:
-        static RValuePtr Direct(const TypePtr& type, LLVMValueRef value);
+        static RValuePtr Direct(Builder&, const TypePtr& type, LLVMValueRef value);
 
-        RValue(const TypePtr& type, LLVMValueRef value);
-        LLVMValueRef Get() override;
+        RValue(Builder&, const TypePtr& type, LLVMValueRef value);
+        [[nodiscard]] LLVMValueRef Get() const override;
+        void Erase() const override;
 
     private:
         LLVMValueRef m_Value;
@@ -33,9 +39,10 @@ namespace Brewer
     class LValue : public Value
     {
     public:
-        LValue(const TypePtr& type, LLVMValueRef ptr);
-        LLVMValueRef Get() override;
-        void Set(LLVMValueRef val);
+        LValue(Builder&, const TypePtr& type, LLVMValueRef ptr);
+        [[nodiscard]] LLVMValueRef Get() const override;
+        void Erase() const override;
+        void Set(LLVMValueRef value) const;
 
     private:
         LLVMValueRef m_Ptr;

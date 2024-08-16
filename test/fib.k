@@ -1,4 +1,4 @@
-# Compute the x'th fibonacci number. #
+# Compute the fibonacci number of x. #
 def fib(x)
     if x < 3 then
         1

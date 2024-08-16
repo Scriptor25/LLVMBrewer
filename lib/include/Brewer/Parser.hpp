@@ -42,13 +42,13 @@ namespace Brewer
         Token NextToken();
 
         ExprPtr ParseBinary();
-        ExprPtr ParseBinary(ExprPtr, size_t);
+        ExprPtr ParseBinary(ExprPtr, int);
         ExprPtr ParseCall();
         ExprPtr ParseCall(ExprPtr);
-        ExprPtr ParseIndex();
-        ExprPtr ParseIndex(ExprPtr);
         ExprPtr ParseUnary();
         ExprPtr ParseUnary(ExprPtr);
+        ExprPtr ParseIndex();
+        ExprPtr ParseIndex(ExprPtr);
         ExprPtr ParsePrimary();
 
         std::istream& m_Stream;

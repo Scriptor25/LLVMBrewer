@@ -1,8 +1,8 @@
 #include <map>
 #include <stdexcept>
 #include <Brewer/AST.hpp>
-#include <Brewer/Memory.hpp>
 #include <Brewer/Parser.hpp>
+#include <Brewer/Util.hpp>
 
 Brewer::Parser::Parser(std::istream& stream, const std::string& filename)
     : m_Stream(stream), m_SL{filename, 1, 0}
@@ -99,12 +99,12 @@ Brewer::ExprPtr Brewer::Parser::ParseExpr()
     return ParseBinary();
 }
 
-static int isodigit(const int c)
+static int is_oct_digit(const int c)
 {
     return 0x30 <= c && c <= 0x37;
 }
 
-static int isop(const int c)
+static int is_operator(const int c)
 {
     return c == '+'
         || c == '-'
@@ -121,7 +121,7 @@ static int isop(const int c)
         || c == '~';
 }
 
-static int iscop(const int c)
+static int is_compound_operator(const int c)
 {
     return c == '+'
         || c == '-'
@@ -164,7 +164,7 @@ void Brewer::Parser::Escape()
         }
     default:
         {
-            if (isodigit(chr))
+            if (is_oct_digit(chr))
             {
                 std::string value;
                 value += static_cast<char>(chr);
@@ -267,7 +267,7 @@ Brewer::Token Brewer::Parser::NextToken()
                     break;
                 }
 
-                if (isop(chr))
+                if (is_operator(chr))
                 {
                     sl = m_SL;
                     state = TokenizerState_Operator;
@@ -338,7 +338,7 @@ Brewer::Token Brewer::Parser::NextToken()
                 value += "0.";
                 break;
             }
-            if (isodigit(chr))
+            if (is_oct_digit(chr))
             {
                 state = TokenizerState_Oct;
                 value += static_cast<char>(chr);
@@ -355,7 +355,7 @@ Brewer::Token Brewer::Parser::NextToken()
             return {sl, TokenType_Bin, value};
 
         case TokenizerState_Oct:
-            if (isodigit(chr) || chr == 'u')
+            if (is_oct_digit(chr) || chr == 'u')
             {
                 value += static_cast<char>(chr);
                 break;
@@ -391,7 +391,7 @@ Brewer::Token Brewer::Parser::NextToken()
             break;
 
         case TokenizerState_Operator:
-            if (!iscop(chr))
+            if (!is_compound_operator(chr))
                 return {sl, TokenType_Operator, value};
             value += static_cast<char>(chr);
             break;
@@ -408,9 +408,11 @@ Brewer::ExprPtr Brewer::Parser::ParseBinary()
     return ParseBinary(ParseCall(), 0);
 }
 
-Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const size_t min_prec)
+Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const int min_precedence)
 {
-    static std::map<std::string, size_t> prec_map{
+    static std::map<std::string, int> precedences{
+        {"++", -1},
+        {"--", -1},
         {"=", 0},
         {"<<=", 0},
         {">>=", 0},
@@ -444,16 +446,16 @@ Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const size_t min_prec)
         {"%", 6},
     };
 
-    while (At(TokenType_Operator) && prec_map[Current().Value] >= min_prec)
+    while (At(TokenType_Operator) && precedences[Current().Value] >= min_precedence)
     {
         auto [Location, Type, Value] = Skip();
-        const auto prec = prec_map[Value];
+        const auto precedence = precedences[Value];
 
-        auto rhs = std::dynamic_pointer_cast<Expression>(ParseCall());
-        while (At(TokenType_Operator) && prec_map[Current().Value] > prec)
+        auto rhs = dynamic_pointer_cast<Expression>(ParseCall());
+        while (At(TokenType_Operator) && precedences[Current().Value] > precedence)
         {
-            const auto next_prec = prec_map[Current().Value];
-            rhs = ParseBinary(std::move(rhs), prec + (next_prec > prec ? 1 : 0));
+            const auto next_precedence = precedences[Current().Value];
+            rhs = ParseBinary(std::move(rhs), precedence + (next_precedence > precedence ? 1 : 0));
         }
 
         lhs = std::make_unique<BinaryExpression>(Location, Value, std::move(lhs), std::move(rhs));
@@ -464,7 +466,7 @@ Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const size_t min_prec)
 
 Brewer::ExprPtr Brewer::Parser::ParseCall()
 {
-    auto base = ParseCall(ParseIndex());
+    auto base = ParseCall(ParseUnary());
     if (At("["))
         base = ParseIndex(std::move(base));
     return base;
@@ -492,9 +494,25 @@ Brewer::ExprPtr Brewer::Parser::ParseCall(ExprPtr callee)
     return callee;
 }
 
+Brewer::ExprPtr Brewer::Parser::ParseUnary()
+{
+    return ParseUnary(ParseIndex());
+}
+
+Brewer::ExprPtr Brewer::Parser::ParseUnary(ExprPtr operand)
+{
+    if (At("++") || At("--"))
+    {
+        auto [Location, Type, Value] = Skip();
+        operand = std::make_unique<UnaryExpression>(Location, Value, std::move(operand), false);
+    }
+
+    return operand;
+}
+
 Brewer::ExprPtr Brewer::Parser::ParseIndex()
 {
-    return ParseIndex(ParseUnary());
+    return ParseIndex(ParsePrimary());
 }
 
 Brewer::ExprPtr Brewer::Parser::ParseIndex(ExprPtr base)
@@ -510,22 +528,6 @@ Brewer::ExprPtr Brewer::Parser::ParseIndex(ExprPtr base)
     }
 
     return base;
-}
-
-Brewer::ExprPtr Brewer::Parser::ParseUnary()
-{
-    return ParseUnary(ParsePrimary());
-}
-
-Brewer::ExprPtr Brewer::Parser::ParseUnary(ExprPtr operand)
-{
-    if (At("++") || At("--"))
-    {
-        auto [Location, Type, Value] = Skip();
-        operand = std::make_unique<UnaryExpression>(Location, Value, std::move(operand), false);
-    }
-
-    return operand;
 }
 
 Brewer::ExprPtr Brewer::Parser::ParsePrimary()

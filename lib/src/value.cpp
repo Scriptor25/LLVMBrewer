@@ -8,12 +8,14 @@ Brewer::Value::Value(Builder& builder, TypePtr type)
 {
 }
 
+Brewer::Value::~Value() = default;
+
 Brewer::Builder& Brewer::Value::GetBuilder() const
 {
     return m_Builder;
 }
 
-Brewer::TypePtr Brewer::Value::GetType()
+Brewer::TypePtr Brewer::Value::GetType() const
 {
     return m_Type;
 }
@@ -22,8 +24,6 @@ llvm::Type* Brewer::Value::GetIRType() const
 {
     return m_IRType;
 }
-
-Brewer::Value::~Value() = default;
 
 Brewer::RValuePtr Brewer::RValue::Direct(Builder& builder, const TypePtr& type, llvm::Value* value)
 {

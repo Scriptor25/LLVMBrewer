@@ -9,8 +9,6 @@
 
 namespace Brewer
 {
-    typedef std::shared_ptr<Type> TypePtr;
-
     enum TypeID
     {
         Type_Void,
@@ -75,6 +73,33 @@ namespace Brewer
         TypePtr m_Base;
     };
 
+    class ArrayType : public Type
+    {
+    public:
+        static std::shared_ptr<ArrayType> Get(const TypePtr& base, size_t length);
+
+        ArrayType(const std::string& name, const TypePtr& base, size_t length);
+
+        llvm::ArrayType* GenIR(Builder&) const override;
+
+    private:
+        TypePtr m_Base;
+        size_t m_Length;
+    };
+
+    class StructType : public Type
+    {
+    public:
+        static std::shared_ptr<StructType> Get(const std::vector<TypePtr>& elements);
+
+        StructType(const std::string& name, size_t size, const std::vector<TypePtr>& elements);
+
+        llvm::StructType* GenIR(Builder&) const override;
+
+    private:
+        std::vector<TypePtr> m_Elements;
+    };
+
     class FunctionType : public Type
     {
     public:
@@ -95,32 +120,5 @@ namespace Brewer
         TypePtr m_Result;
         std::vector<TypePtr> m_Params;
         bool m_VarArg;
-    };
-
-    class StructType : public Type
-    {
-    public:
-        static std::shared_ptr<StructType> Get(const std::vector<TypePtr>& elements);
-
-        StructType(const std::string& name, size_t size, const std::vector<TypePtr>& elements);
-
-        llvm::StructType* GenIR(Builder&) const override;
-
-    private:
-        std::vector<TypePtr> m_Elements;
-    };
-
-    class ArrayType : public Type
-    {
-    public:
-        static std::shared_ptr<ArrayType> Get(const TypePtr& base, size_t length);
-
-        ArrayType(const std::string& name, const TypePtr& base, size_t length);
-
-        llvm::ArrayType* GenIR(Builder&) const override;
-
-    private:
-        TypePtr m_Base;
-        size_t m_Length;
     };
 }

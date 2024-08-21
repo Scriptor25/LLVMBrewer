@@ -40,19 +40,18 @@ Brewer::ValuePtr Brewer::UnaryExpression::GenIR(Builder& builder) const
                     return RValue::Direct(builder, operand->GetType(), pre);
                 }
 
-                return error<ValuePtr>("at %s(%llu,%llu): cannot assign to rvalue\n",
-                                       Location.Filename.c_str(),
-                                       Location.Row,
-                                       Location.Column);
+                return std::cerr << "at " << Location << ": "
+                    << "cannot assign to rvalue"
+                    << std::endl
+                    << ErrMark<ValuePtr>();
             }
             return result;
         }
     }
 
-    return error<ValuePtr>("at %s(%llu,%llu): undefined unary operator '%s%s'\n",
-                           Location.Filename.c_str(),
-                           Location.Row,
-                           Location.Column,
-                           Operator.c_str(),
-                           operand->GetType()->Name().c_str());
+    return std::cerr << "at " << Location << ": "
+        << "undefined unary operator "
+        << "'" << Operator << operand->GetType() << "'"
+        << std::endl
+        << ErrMark<ValuePtr>();
 }

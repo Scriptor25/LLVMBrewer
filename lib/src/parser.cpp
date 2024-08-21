@@ -408,11 +408,9 @@ Brewer::ExprPtr Brewer::Parser::ParseBinary()
     return ParseBinary(ParseCall(), 0);
 }
 
-Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const int min_precedence)
+static int get_precedence(const std::string& op)
 {
     static std::map<std::string, int> precedences{
-        {"++", -1},
-        {"--", -1},
         {"=", 0},
         {"<<=", 0},
         {">>=", 0},
@@ -446,15 +444,21 @@ Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const int min_precedenc
         {"%", 6},
     };
 
-    while (At(TokenType_Operator) && precedences[Current().Value] >= min_precedence)
+    if (precedences.count(op)) return precedences[op];
+    return -1;
+}
+
+Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const int min_precedence)
+{
+    while (At(TokenType_Operator) && get_precedence(Current().Value) >= min_precedence)
     {
         auto [Location, Type, Value] = Skip();
-        const auto precedence = precedences[Value];
+        const auto precedence = get_precedence(Value);
 
-        auto rhs = dynamic_pointer_cast<Expression>(ParseCall());
-        while (At(TokenType_Operator) && precedences[Current().Value] > precedence)
+        ExprPtr rhs = ParseCall();
+        while (At(TokenType_Operator) && get_precedence(Current().Value) > precedence)
         {
-            const auto next_precedence = precedences[Current().Value];
+            const auto next_precedence = get_precedence(Current().Value);
             rhs = ParseBinary(std::move(rhs), precedence + (next_precedence > precedence ? 1 : 0));
         }
 
@@ -563,5 +567,7 @@ Brewer::ExprPtr Brewer::Parser::ParsePrimary()
     if (At(TokenType_Char)) return std::make_unique<ConstCharExpression>(loc, Skip().Value[0]);
     if (At(TokenType_String)) return std::make_unique<ConstStringExpression>(loc, Skip().Value);
 
-    throw std::runtime_error("unhandled token");
+    const auto [Location, Type, Value] = Skip();
+    return std::cerr << "at " << Location << ": unhandled token '" << Value << "' (" << Type << ")" <<
+        std::endl << ErrMark<ExprPtr>();
 }

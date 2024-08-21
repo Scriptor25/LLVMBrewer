@@ -33,10 +33,11 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
             return dest;
         }
 
-        return error<ValuePtr>("at %s(%llu,%llu): cannot assign to rvalue\n",
-                               Location.Filename.c_str(),
-                               Location.Row,
-                               Location.Column);
+        return std::cerr
+            << "at " << Location << ": "
+            << "cannot assign to rvalue"
+            << std::endl
+            << ErrMark<ValuePtr>();
     }
 
     auto l = lhs;
@@ -56,49 +57,41 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
         if (auto result = fn(builder, l, r))
             return result;
 
-        return error<ValuePtr>("at %s(%llu,%llu): undefined binary operator '%s %s %s'\n",
-                               Location.Filename.c_str(),
-                               Location.Row,
-                               Location.Column,
-                               lhs->GetType()->Name().c_str(),
-                               Operator.c_str(),
-                               rhs->GetType()->Name().c_str());
+        return std::cerr
+            << "at " << Location << ": "
+            << "undefined binary operator "
+            << "'" << lhs->GetType() << " " << Operator << rhs->GetType() << "'"
+            << std::endl
+            << ErrMark<ValuePtr>();
     }
 
-    const auto pos = Operator.find('=');
-    if (pos == std::string::npos)
-        return error<ValuePtr>("at %s(%llu,%llu): undefined binary operator '%s %s %s'\n",
-                               Location.Filename.c_str(),
-                               Location.Row,
-                               Location.Column,
-                               lhs->GetType()->Name().c_str(),
-                               Operator.c_str(),
-                               rhs->GetType()->Name().c_str());
-
-    const auto op = Operator.substr(0, pos);
-    if (const auto& fn = builder.GenBinaryFn(op))
+    if (const auto pos = Operator.find('='); pos != std::string::npos)
     {
-        if (const auto result = fn(builder, l, r))
+        const auto op = Operator.substr(0, pos);
+        if (const auto& fn = builder.GenBinaryFn(op))
         {
-            if (auto dest = std::dynamic_pointer_cast<LValue>(lhs))
+            if (const auto result = fn(builder, l, r))
             {
-                const auto src = builder.GenCast(result, lhs->GetType());
-                dest->Set(src->Get());
-                return dest;
-            }
+                if (auto dest = std::dynamic_pointer_cast<LValue>(lhs))
+                {
+                    const auto src = builder.GenCast(result, lhs->GetType());
+                    dest->Set(src->Get());
+                    return dest;
+                }
 
-            return error<ValuePtr>("at %s(%llu,%llu): cannot assign to rvalue\n",
-                                   Location.Filename.c_str(),
-                                   Location.Row,
-                                   Location.Column);
+                return std::cerr
+                    << "at " << Location << ": "
+                    << "cannot assign to rvalue"
+                    << std::endl
+                    << ErrMark<ValuePtr>();
+            }
         }
     }
 
-    return error<ValuePtr>("at %s(%llu,%llu): undefined binary operator '%s %s %s'\n",
-                           Location.Filename.c_str(),
-                           Location.Row,
-                           Location.Column,
-                           lhs->GetType()->Name().c_str(),
-                           Operator.c_str(),
-                           rhs->GetType()->Name().c_str());
+    return std::cerr
+        << "at " << Location << ": "
+        << "undefined binary operator "
+        << "'" << lhs->GetType() << " " << Operator << rhs->GetType() << "'"
+        << std::endl
+        << ErrMark<ValuePtr>();
 }

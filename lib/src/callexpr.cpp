@@ -29,10 +29,11 @@ Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
             std::dynamic_pointer_cast<PointerType>(
                 callee->GetType())->Base());
     if (!type)
-        return error<ValuePtr>("at %s(%ull,%ull): callee must be of type function pointer",
-                               Location.Filename.c_str(),
-                               Location.Row,
-                               Location.Column);
+        return std::cerr
+            << "at " << Location << ": "
+            << "callee must be a function pointer"
+            << std::endl
+            << ErrMark<ValuePtr>();
 
     const auto ty = type->GenIR(builder);
     if (!ty) return {};
@@ -48,10 +49,11 @@ Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
 
     const auto result = builder.IRBuilder().CreateCall(ty, callee->Get(), args);
     if (!result)
-        return error<ValuePtr>("at %s(%llu,%llu): failed to create call",
-                               Location.Filename.c_str(),
-                               Location.Row,
-                               Location.Column);
+        return std::cerr
+            << "at " << Location << ": "
+            << "failed to create call"
+            << std::endl
+            << ErrMark<ValuePtr>();
 
     return RValue::Direct(builder, type->Result(), result);
 }

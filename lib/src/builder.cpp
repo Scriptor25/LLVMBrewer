@@ -512,5 +512,11 @@ Brewer::ValuePtr Brewer::Builder::GenCast(const ValuePtr& value, const TypePtr& 
         }
     }
 
-    return error<ValuePtr>("undefined cast from %s to %s\n", value_type->Name().c_str(), type->Name().c_str());
+    return std::cerr
+        << "undefined cast from "
+        << value_type
+        << " to "
+        << type
+        << std::endl
+        << ErrMark<ValuePtr>();
 }

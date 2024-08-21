@@ -5,7 +5,9 @@
 #include <string>
 #include <vector>
 #include <Brewer/Brewer.hpp>
-#include <llvm-c/Core.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
 
 namespace Brewer
 {
@@ -40,11 +42,10 @@ namespace Brewer
         static ValuePtr GenNot(Builder&, const ValuePtr& val);
 
         Builder(const std::string& module_id, const std::string& filename);
-        ~Builder();
 
-        [[nodiscard]] const LLVMContextRef& Context() const;
-        [[nodiscard]] const LLVMBuilderRef& IRBuilder() const;
-        [[nodiscard]] const LLVMModuleRef& Module() const;
+        [[nodiscard]]  llvm::LLVMContext& Context() const;
+        [[nodiscard]]  llvm::IRBuilder<>& IRBuilder() const;
+        [[nodiscard]]  llvm::Module& Module() const;
 
         BinaryFn& GenBinaryFn(const std::string& operator_);
         UnaryFn& GenUnaryFn(const std::string& operator_);
@@ -61,10 +62,10 @@ namespace Brewer
         ValuePtr GenCast(const ValuePtr& value, const TypePtr& type);
 
     private:
-        LLVMContextRef m_Context;
-        LLVMBuilderRef m_IRBuilder;
-        LLVMModuleRef m_Module;
-        LLVMValueRef m_Global;
+        std::unique_ptr<llvm::LLVMContext> m_Context;
+        std::unique_ptr<llvm::IRBuilder<>> m_IRBuilder;
+        std::unique_ptr<llvm::Module> m_Module;
+        llvm::Function* m_Global;
 
         std::map<std::string, BinaryFn> m_BinaryFns;
         std::map<std::string, UnaryFn> m_UnaryFns;

@@ -12,6 +12,7 @@ namespace Brewer
     // Backend
     class Builder;
     class Type;
+    class FunctionType;
     class Value;
     class RValue;
     class LValue;

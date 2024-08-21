@@ -33,15 +33,13 @@ Brewer::ValuePtr Brewer::UnaryExpression::GenIR(Builder& builder) const
             {
                 if (auto dest = std::dynamic_pointer_cast<LValue>(operand))
                 {
-                    LLVMValueRef pre;
+                    llvm::Value* pre;
                     if (!LH) pre = dest->Get();
                     dest->Set(result->Get());
                     if (LH) return dest;
                     return RValue::Direct(builder, operand->GetType(), pre);
                 }
 
-                result->Erase();
-                operand->Erase();
                 return error<ValuePtr>("at %s(%llu,%llu): cannot assign to rvalue\n",
                                        Location.Filename.c_str(),
                                        Location.Row,
@@ -51,7 +49,6 @@ Brewer::ValuePtr Brewer::UnaryExpression::GenIR(Builder& builder) const
         }
     }
 
-    operand->Erase();
     return error<ValuePtr>("at %s(%llu,%llu): undefined unary operator '%s%s'\n",
                            Location.Filename.c_str(),
                            Location.Row,

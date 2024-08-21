@@ -22,11 +22,7 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
     const auto lhs = LHS->GenIR(builder);
     if (!lhs) return {};
     const auto rhs = RHS->GenIR(builder);
-    if (!rhs)
-    {
-        lhs->Erase();
-        return {};
-    }
+    if (!rhs) return {};
 
     if (Operator == "=")
     {
@@ -37,8 +33,6 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
             return dest;
         }
 
-        lhs->Erase();
-        rhs->Erase();
         return error<ValuePtr>("at %s(%llu,%llu): cannot assign to rvalue\n",
                                Location.Filename.c_str(),
                                Location.Row,
@@ -52,20 +46,9 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
     {
         const auto type = Type::GetHigherOrder(l->GetType(), r->GetType());
         l = builder.GenCast(l, type);
-        if (!l)
-        {
-            lhs->Erase();
-            rhs->Erase();
-            return {};
-        }
+        if (!l) return {};
         r = builder.GenCast(r, type);
-        if (!r)
-        {
-            lhs->Erase();
-            rhs->Erase();
-            if (l != lhs)l->Erase();
-            return {};
-        }
+        if (!r) return {};
     }
 
     if (const auto& fn = builder.GenBinaryFn(Operator))
@@ -73,10 +56,6 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
         if (auto result = fn(builder, l, r))
             return result;
 
-        lhs->Erase();
-        rhs->Erase();
-        if (l != lhs) l->Erase();
-        if (r != rhs) r->Erase();
         return error<ValuePtr>("at %s(%llu,%llu): undefined binary operator '%s %s %s'\n",
                                Location.Filename.c_str(),
                                Location.Row,
@@ -88,11 +67,6 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
 
     const auto pos = Operator.find('=');
     if (pos == std::string::npos)
-    {
-        lhs->Erase();
-        rhs->Erase();
-        if (l != lhs) l->Erase();
-        if (r != rhs) r->Erase();
         return error<ValuePtr>("at %s(%llu,%llu): undefined binary operator '%s %s %s'\n",
                                Location.Filename.c_str(),
                                Location.Row,
@@ -100,7 +74,6 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
                                lhs->GetType()->Name().c_str(),
                                Operator.c_str(),
                                rhs->GetType()->Name().c_str());
-    }
 
     const auto op = Operator.substr(0, pos);
     if (const auto& fn = builder.GenBinaryFn(op))
@@ -114,11 +87,6 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
                 return dest;
             }
 
-            lhs->Erase();
-            rhs->Erase();
-            if (l != lhs) l->Erase();
-            if (r != rhs) r->Erase();
-            result->Erase();
             return error<ValuePtr>("at %s(%llu,%llu): cannot assign to rvalue\n",
                                    Location.Filename.c_str(),
                                    Location.Row,
@@ -126,10 +94,6 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
         }
     }
 
-    lhs->Erase();
-    rhs->Erase();
-    if (l != lhs) l->Erase();
-    if (r != rhs) r->Erase();
     return error<ValuePtr>("at %s(%llu,%llu): undefined binary operator '%s %s %s'\n",
                            Location.Filename.c_str(),
                            Location.Row,

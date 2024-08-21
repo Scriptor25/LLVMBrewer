@@ -1,7 +1,6 @@
 #include <map>
 #include <Brewer/Builder.hpp>
 #include <Brewer/Type.hpp>
-#include <llvm-c/Core.h>
 
 std::map<std::string, Brewer::TypePtr> types{
     {"void", std::make_shared<Brewer::Type>("void", Brewer::Type_Void, 0)},
@@ -76,18 +75,18 @@ Brewer::Type::Type(std::string name, const TypeID id, const size_t size)
 
 Brewer::Type::~Type() = default;
 
-LLVMTypeRef Brewer::Type::GenIR(Builder& builder) const
+llvm::Type* Brewer::Type::GenIR(Builder& builder) const
 {
     switch (m_ID)
     {
-    case Type_Void: return LLVMVoidTypeInContext(builder.Context());
-    case Type_Integer: return LLVMIntTypeInContext(builder.Context(), m_Size);
+    case Type_Void: return builder.IRBuilder().getVoidTy();
+    case Type_Integer: return builder.IRBuilder().getIntNTy(m_Size);
     case Type_Float:
         switch (m_Size)
         {
-        case 16: return LLVMHalfTypeInContext(builder.Context());
-        case 32: return LLVMFloatTypeInContext(builder.Context());
-        case 64: return LLVMDoubleTypeInContext(builder.Context());
+        case 16: return builder.IRBuilder().getHalfTy();
+        case 32: return builder.IRBuilder().getFloatTy();
+        case 64: return builder.IRBuilder().getDoubleTy();
         default: return {};
         }
     default: return {};
@@ -193,9 +192,9 @@ Brewer::PointerType::PointerType(const std::string& name, TypePtr base)
 {
 }
 
-LLVMTypeRef Brewer::PointerType::GenIR(Builder& builder) const
+llvm::PointerType* Brewer::PointerType::GenIR(Builder& builder) const
 {
-    return LLVMPointerTypeInContext(builder.Context(), 0);
+    return llvm::PointerType::get(builder.Context(), 0);
 }
 
 Brewer::TypePtr Brewer::PointerType::Base() const
@@ -234,12 +233,12 @@ Brewer::FunctionType::FunctionType(const std::string& name,
 {
 }
 
-LLVMTypeRef Brewer::FunctionType::GenIR(Builder& builder) const
+llvm::FunctionType* Brewer::FunctionType::GenIR(Builder& builder) const
 {
-    std::vector<LLVMTypeRef> params(m_Params.size());
+    std::vector<llvm::Type*> params(m_Params.size());
     for (size_t i = 0; i < params.size(); ++i)
         params[i] = m_Params[i]->GenIR(builder);
-    return LLVMFunctionType(m_Result->GenIR(builder), params.data(), params.size(), m_VarArg);
+    return llvm::FunctionType::get(m_Result->GenIR(builder), params, m_VarArg);
 }
 
 Brewer::TypePtr Brewer::FunctionType::Result()
@@ -275,12 +274,12 @@ Brewer::StructType::StructType(const std::string& name, const size_t size, const
 {
 }
 
-LLVMTypeRef Brewer::StructType::GenIR(Builder& builder) const
+llvm::StructType* Brewer::StructType::GenIR(Builder& builder) const
 {
-    std::vector<LLVMTypeRef> elements(m_Elements.size());
+    std::vector<llvm::Type*> elements(m_Elements.size());
     for (size_t i = 0; i < elements.size(); ++i)
         elements[i] = m_Elements[i]->GenIR(builder);
-    return LLVMStructTypeInContext(builder.Context(), elements.data(), elements.size(), false);
+    return llvm::StructType::get(builder.Context(), elements, false);
 }
 
 std::shared_ptr<Brewer::ArrayType> Brewer::ArrayType::Get(const TypePtr& base, const size_t length)
@@ -297,7 +296,7 @@ Brewer::ArrayType::ArrayType(const std::string& name, const TypePtr& base, const
 {
 }
 
-LLVMTypeRef Brewer::ArrayType::GenIR(Builder& builder) const
+llvm::ArrayType* Brewer::ArrayType::GenIR(Builder& builder) const
 {
-    return LLVMArrayType2(m_Base->GenIR(builder), m_Length);
+    return llvm::ArrayType::get(m_Base->GenIR(builder), m_Length);
 }

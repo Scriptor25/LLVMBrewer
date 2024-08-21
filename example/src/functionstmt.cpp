@@ -18,18 +18,18 @@ std::ostream& Test::FunctionStatement::Dump(std::ostream& stream) const
 
 Brewer::ValuePtr Test::FunctionStatement::GenIR(Brewer::Builder& builder) const
 {
-    const auto f = Proto.GenIR(builder);
-    if (!f || LLVMCountBasicBlocks(f)) return {};
+    const auto fn = Proto.GenIR(builder);
+    if (!fn || !fn->empty()) return {};
 
-    const auto bb = LLVMAppendBasicBlockInContext(builder.Context(), f, "entry");
-    const auto bkp = LLVMGetInsertBlock(builder.IRBuilder());
-    LLVMPositionBuilderAtEnd(builder.IRBuilder(), bb);
+    const auto bb = llvm::BasicBlock::Create(builder.Context(), "entry", fn);
+    const auto bkp = builder.IRBuilder().GetInsertBlock();
+    builder.IRBuilder().SetInsertPoint(bb);
 
     builder.Push();
-    for (size_t i = 0; i < LLVMCountParams(f); ++i)
+    for (size_t i = 0; i < Proto.Params.size(); ++i)
     {
         const auto name = Proto.Params[i];
-        const auto param = LLVMGetParam(f, i);
+        const auto param = fn->getArg(i);
         builder[name] = Brewer::RValue::Direct(builder, Brewer::Type::Get("f64"), param);
     }
 
@@ -37,13 +37,13 @@ Brewer::ValuePtr Test::FunctionStatement::GenIR(Brewer::Builder& builder) const
     if (!return_value)
     {
         builder.Pop();
-        LLVMPositionBuilderAtEnd(builder.IRBuilder(), bkp);
-        LLVMRemoveBasicBlockFromParent(bb);
+        builder.IRBuilder().SetInsertPoint(bkp);
+        fn->erase(fn->begin(), fn->end());
         return {};
     }
 
-    LLVMBuildRet(builder.IRBuilder(), return_value->Get());
+    builder.IRBuilder().CreateRet(return_value->Get());
     builder.Pop();
-    LLVMPositionBuilderAtEnd(builder.IRBuilder(), bkp);
-    return Brewer::RValue::Direct(builder, Brewer::PointerType::Get(Proto.GetType()), f);
+    builder.IRBuilder().SetInsertPoint(bkp);
+    return Brewer::RValue::Direct(builder, Brewer::PointerType::Get(Proto.GetType()), fn);
 }

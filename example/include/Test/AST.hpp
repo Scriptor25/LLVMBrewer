@@ -4,7 +4,7 @@
 #include <vector>
 #include <Brewer/AST.hpp>
 #include <Brewer/Brewer.hpp>
-#include <llvm-c/Core.h>
+#include <llvm/IR/Value.h>
 
 namespace Test
 {
@@ -12,8 +12,8 @@ namespace Test
     {
         Prototype(std::string name, const std::vector<std::string>& params);
         std::ostream& Dump(std::ostream& stream) const;
-        LLVMValueRef GenIR(Brewer::Builder& builder) const;
-        [[nodiscard]] Brewer::TypePtr GetType() const;
+        llvm::Function* GenIR(Brewer::Builder& builder) const;
+        [[nodiscard]] std::shared_ptr<Brewer::FunctionType> GetType() const;
 
         std::string Name;
         std::vector<std::string> Params;

@@ -18,62 +18,41 @@ std::ostream& Test::IfExpression::Dump(std::ostream& stream) const
 
 Brewer::ValuePtr Test::IfExpression::GenIR(Brewer::Builder& builder) const
 {
-    const auto bkp = LLVMGetInsertBlock(builder.IRBuilder());
-    const auto f = LLVMGetBasicBlockParent(bkp);
-    auto then_bb = LLVMAppendBasicBlockInContext(builder.Context(), f, "then");
-    auto else_bb = LLVMAppendBasicBlockInContext(builder.Context(), f, "else");
-    const auto end_bb = LLVMAppendBasicBlockInContext(builder.Context(), f, "end");
+    const auto bkp = builder.IRBuilder().GetInsertBlock();
+    const auto f = bkp->getParent();
+    auto then_bb = llvm::BasicBlock::Create(builder.Context(), "then", f);
+    auto else_bb = llvm::BasicBlock::Create(builder.Context(), "else", f);
+    const auto end_bb = llvm::BasicBlock::Create(builder.Context(), "end", f);
 
     const auto condition = Condition->GenIR(builder);
-    if (!condition)
-    {
-        LLVMPositionBuilderAtEnd(builder.IRBuilder(), bkp);
-        LLVMRemoveBasicBlockFromParent(then_bb);
-        LLVMRemoveBasicBlockFromParent(else_bb);
-        LLVMRemoveBasicBlockFromParent(end_bb);
-        return {};
-    }
-    LLVMBuildCondBr(builder.IRBuilder(), condition->Get(), then_bb, else_bb);
+    if (!condition) return {};
+    builder.IRBuilder().CreateCondBr(condition->Get(), then_bb, else_bb);
 
-    LLVMPositionBuilderAtEnd(builder.IRBuilder(), then_bb);
+    builder.IRBuilder().SetInsertPoint(then_bb);
     const auto then = Then->GenIR(builder);
-    if (!then)
-    {
-        LLVMPositionBuilderAtEnd(builder.IRBuilder(), bkp);
-        LLVMRemoveBasicBlockFromParent(then_bb);
-        LLVMRemoveBasicBlockFromParent(else_bb);
-        LLVMRemoveBasicBlockFromParent(end_bb);
-        return {};
-    }
-    then_bb = LLVMGetInsertBlock(builder.IRBuilder());
+    if (!then) return {};
+    then_bb = builder.IRBuilder().GetInsertBlock();
 
-    LLVMPositionBuilderAtEnd(builder.IRBuilder(), else_bb);
+    builder.IRBuilder().SetInsertPoint(else_bb);
     const auto else_ = Else->GenIR(builder);
-    if (!else_)
-    {
-        LLVMPositionBuilderAtEnd(builder.IRBuilder(), bkp);
-        LLVMRemoveBasicBlockFromParent(then_bb);
-        LLVMRemoveBasicBlockFromParent(else_bb);
-        LLVMRemoveBasicBlockFromParent(end_bb);
-        return {};
-    }
-    else_bb = LLVMGetInsertBlock(builder.IRBuilder());
+    if (!else_) return {};
+    else_bb = builder.IRBuilder().GetInsertBlock();
 
     const auto type = Brewer::Type::GetHigherOrder(then->GetType(), else_->GetType());
     const auto ty = type->GenIR(builder);
 
-    LLVMPositionBuilderAtEnd(builder.IRBuilder(), then_bb);
-    auto then_result = builder.GenCast(then, type)->Get();
-    LLVMBuildBr(builder.IRBuilder(), end_bb);
+    builder.IRBuilder().SetInsertPoint(then_bb);
+    const auto then_result = builder.GenCast(then, type)->Get();
+    builder.IRBuilder().CreateBr(end_bb);
 
-    LLVMPositionBuilderAtEnd(builder.IRBuilder(), else_bb);
-    auto else_result = builder.GenCast(else_, type)->Get();
-    LLVMBuildBr(builder.IRBuilder(), end_bb);
+    builder.IRBuilder().SetInsertPoint(else_bb);
+    const auto else_result = builder.GenCast(else_, type)->Get();
+    builder.IRBuilder().CreateBr(end_bb);
 
-    LLVMPositionBuilderAtEnd(builder.IRBuilder(), end_bb);
-    const auto phi = LLVMBuildPhi(builder.IRBuilder(), ty, "");
-    LLVMAddIncoming(phi, &then_result, &then_bb, 1);
-    LLVMAddIncoming(phi, &else_result, &else_bb, 1);
+    builder.IRBuilder().SetInsertPoint(end_bb);
+    const auto phi = builder.IRBuilder().CreatePHI(ty, 2);
+    phi->addIncoming(then_result, then_bb);
+    phi->addIncoming(else_result, else_bb);
 
     return Brewer::RValue::Direct(builder, then->GetType(), phi);
 }

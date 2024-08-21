@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 #include <Brewer/Brewer.hpp>
-#include <llvm-c/Types.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Type.h>
 
 namespace Brewer
 {
@@ -30,7 +31,7 @@ namespace Brewer
         Type(std::string name, TypeID id, size_t size);
         virtual ~Type();
 
-        virtual LLVMTypeRef GenIR(Builder&) const;
+        virtual llvm::Type* GenIR(Builder&) const;
 
         [[nodiscard]] const std::string& Name() const;
         [[nodiscard]] size_t Size() const;
@@ -66,7 +67,7 @@ namespace Brewer
         static std::shared_ptr<PointerType> Get(const TypePtr& base);
 
         PointerType(const std::string& name, TypePtr base);
-        LLVMTypeRef GenIR(Builder&) const override;
+        llvm::PointerType* GenIR(Builder&) const override;
 
         [[nodiscard]] TypePtr Base() const;
 
@@ -85,7 +86,7 @@ namespace Brewer
                      TypePtr result,
                      const std::vector<TypePtr>& params,
                      bool vararg);
-        LLVMTypeRef GenIR(Builder&) const override;
+        llvm::FunctionType* GenIR(Builder&) const override;
 
         TypePtr Result();
         TypePtr Param(size_t i);
@@ -103,7 +104,7 @@ namespace Brewer
 
         StructType(const std::string& name, size_t size, const std::vector<TypePtr>& elements);
 
-        LLVMTypeRef GenIR(Builder&) const override;
+        llvm::StructType* GenIR(Builder&) const override;
 
     private:
         std::vector<TypePtr> m_Elements;
@@ -116,7 +117,7 @@ namespace Brewer
 
         ArrayType(const std::string& name, const TypePtr& base, size_t length);
 
-        LLVMTypeRef GenIR(Builder&) const override;
+        llvm::ArrayType* GenIR(Builder&) const override;
 
     private:
         TypePtr m_Base;

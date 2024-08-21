@@ -1,5 +1,6 @@
 #include <Brewer/Type.hpp>
 #include <Brewer/Value.hpp>
+#include <llvm/IR/Function.h>
 #include <Test/AST.hpp>
 
 Test::ExternStatement::ExternStatement(const Brewer::SourceLocation& loc, Prototype proto)
@@ -14,7 +15,7 @@ std::ostream& Test::ExternStatement::Dump(std::ostream& stream) const
 
 Brewer::ValuePtr Test::ExternStatement::GenIR(Brewer::Builder& builder) const
 {
-    const auto f = Proto.GenIR(builder);
-    if (!f) return {};
-    return Brewer::RValue::Direct(builder, Brewer::PointerType::Get(Proto.GetType()), f);
+    const auto fn = Proto.GenIR(builder);
+    if (!fn) return {};
+    return Brewer::RValue::Direct(builder, Brewer::PointerType::Get(Proto.GetType()), fn);
 }

@@ -80,6 +80,8 @@ void Brewer::Pipeline::ParseAndBuild()
     while (!parser.AtEOF())
     {
         const auto stmt_ptr = parser.Parse();
+        if (!stmt_ptr) continue;
+
         if (m_DumpAST) stmt_ptr->Dump(std::cerr) << std::endl;
         stmt_ptr->GenIR(builder);
     }

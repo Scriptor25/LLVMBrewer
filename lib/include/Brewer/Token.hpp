@@ -26,5 +26,6 @@ namespace Brewer
         std::string Value;
     };
 
+    std::ostream& operator<<(std::ostream&, const TokenType&);
     std::ostream& operator<<(std::ostream&, const Token&);
 }

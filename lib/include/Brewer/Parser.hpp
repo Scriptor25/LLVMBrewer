@@ -52,8 +52,8 @@ namespace Brewer
         ExprPtr ParsePrimary();
 
         std::istream& m_Stream;
-        SourceLocation m_SL;
-        int chr = -1;
+        SourceLocation m_Location;
+        int m_CC = -1;
 
         Token m_Token;
 

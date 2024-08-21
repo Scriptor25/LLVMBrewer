@@ -5,7 +5,7 @@
 #include <Brewer/Util.hpp>
 
 Brewer::Parser::Parser(std::istream& stream, const std::string& filename)
-    : m_Stream(stream), m_SL{filename, 1, 0}
+    : m_Stream(stream), m_Location{filename, 1, 0}
 {
     Next();
 }
@@ -76,14 +76,24 @@ Brewer::Token Brewer::Parser::Expect(const TokenType type)
 {
     if (At(type))
         return Skip();
-    throw std::runtime_error("unexpected token");
+    auto [Location, Type, Value] = Skip();
+    return std::cerr
+        << "at " << Location << ": "
+        << "expected type " << type << ", got " << Type
+        << std::endl
+        << ErrMark<Token>();
 }
 
 Brewer::Token Brewer::Parser::Expect(const std::string& value)
 {
     if (At(value))
         return Skip();
-    throw std::runtime_error("unexpected token");
+    auto [Location, Type, Value] = Skip();
+    return std::cerr
+        << "at " << Location << ": "
+        << "expected value '" << value << "', got '" << Value << "'"
+        << std::endl
+        << ErrMark<Token>();
 }
 
 Brewer::StmtPtr Brewer::Parser::Parse()
@@ -91,7 +101,7 @@ Brewer::StmtPtr Brewer::Parser::Parse()
     if (const auto& fn = m_StmtFnMap[Current().Value])
         return fn(*this);
 
-    return ParseBinary();
+    return ParseExpr();
 }
 
 Brewer::ExprPtr Brewer::Parser::ParseExpr()
@@ -121,291 +131,302 @@ static int is_operator(const int c)
         || c == '~';
 }
 
-static int is_compound_operator(const int c)
-{
-    return c == '+'
-        || c == '-'
-        || c == '&'
-        || c == '|'
-        || c == '='
-        || c == '<'
-        || c == '>';
-}
-
 int Brewer::Parser::Get()
 {
-    ++m_SL.Column;
+    ++m_Location.Column;
     return m_Stream.get();
 }
 
 void Brewer::Parser::Escape()
 {
-    if (chr != '\\')
+    if (m_CC != '\\')
         return;
 
-    chr = Get();
-    switch (chr)
+    m_CC = Get();
+    switch (m_CC)
     {
-    case 'a': chr = 0x07;
-    case 'b': chr = 0x08;
-    case 't': chr = 0x09;
-    case 'n': chr = 0x0A;
-    case 'v': chr = 0x0B;
-    case 'f': chr = 0x0C;
-    case 'r': chr = 0x0D;
+    case 'a':
+        m_CC = 0x07;
+        break;
+    case 'b':
+        m_CC = 0x08;
+        break;
+    case 't':
+        m_CC = 0x09;
+        break;
+    case 'n':
+        m_CC = 0x0A;
+        break;
+    case 'v':
+        m_CC = 0x0B;
+        break;
+    case 'f':
+        m_CC = 0x0C;
+        break;
+    case 'r':
+        m_CC = 0x0D;
+        break;
     case 'x':
         {
-            chr = Get();
+            m_CC = Get();
             std::string value;
-            value += static_cast<char>(chr);
-            chr = Get();
-            value += static_cast<char>(chr);
-            chr = std::stoi(value, nullptr, 16);
+            value += static_cast<char>(m_CC);
+            m_CC = Get();
+            value += static_cast<char>(m_CC);
+            m_CC = std::stoi(value, nullptr, 16);
         }
+        break;
     default:
         {
-            if (is_oct_digit(chr))
+            if (is_oct_digit(m_CC))
             {
                 std::string value;
-                value += static_cast<char>(chr);
-                chr = Get();
-                value += static_cast<char>(chr);
-                chr = Get();
-                value += static_cast<char>(chr);
-                chr = std::stoi(value, nullptr, 8);
+                value += static_cast<char>(m_CC);
+                m_CC = Get();
+                value += static_cast<char>(m_CC);
+                m_CC = Get();
+                value += static_cast<char>(m_CC);
+                m_CC = std::stoi(value, nullptr, 8);
             }
         }
+        break;
     }
 }
 
 void Brewer::Parser::NewLine()
 {
-    m_SL.Column = 0;
-    ++m_SL.Row;
+    m_Location.Column = 0;
+    ++m_Location.Row;
 }
 
 Brewer::Token Brewer::Parser::NextToken()
 {
-    enum TokenizerState
+    enum State
     {
-        TokenizerState_Normal,
-        TokenizerState_Comment,
-        TokenizerState_Name,
-        TokenizerState_Radix,
-        TokenizerState_Bin,
-        TokenizerState_Oct,
-        TokenizerState_Dec,
-        TokenizerState_Hex,
-        TokenizerState_Char,
-        TokenizerState_String,
-        TokenizerState_Operator,
+        State_Normal,
+        State_Comment,
+        State_Name,
+        State_Radix,
+        State_Bin,
+        State_Oct,
+        State_Dec,
+        State_Hex,
+        State_Char,
+        State_String,
+        State_Operator,
     };
 
-    if (chr < 0)
-        chr = Get();
+    if (m_CC < 0)
+        m_CC = Get();
 
-    while (0x00 <= chr && chr <= 0x20)
+    while (0x00 <= m_CC && m_CC <= 0x20)
     {
-        if (chr == '\n')
+        if (m_CC == '\n')
             NewLine();
-        chr = Get();
+        m_CC = Get();
     }
 
-    TokenizerState state = TokenizerState_Normal;
+    auto state = State_Normal;
     bool isfloat;
     std::string value;
-    SourceLocation sl;
+    SourceLocation loc;
 
-    while (chr >= 0 || state != TokenizerState_Normal)
+    while (m_CC >= 0 || state != State_Normal)
     {
         switch (state)
         {
-        case TokenizerState_Normal:
-            switch (chr)
+        case State_Normal:
+            switch (m_CC)
             {
             case '#':
-                state = TokenizerState_Comment;
+                state = State_Comment;
                 break;
 
             case '"':
-                sl = m_SL;
-                state = TokenizerState_String;
+                loc = m_Location;
+                state = State_String;
                 break;
 
             case '\'':
-                sl = m_SL;
-                state = TokenizerState_Char;
+                loc = m_Location;
+                state = State_Char;
                 break;
 
             case '0':
-                sl = m_SL;
-                state = TokenizerState_Radix;
+                loc = m_Location;
+                state = State_Radix;
                 break;
 
             default:
-                if (chr <= 0x20)
+                if (m_CC <= 0x20)
                 {
-                    if (chr == '\n')
+                    if (m_CC == '\n')
                         NewLine();
                     break;
                 }
 
-                if (isdigit(chr))
+                if (isdigit(m_CC))
                 {
-                    sl = m_SL;
-                    state = TokenizerState_Dec;
+                    loc = m_Location;
+                    state = State_Dec;
                     isfloat = false;
-                    value += static_cast<char>(chr);
+                    value += static_cast<char>(m_CC);
                     break;
                 }
 
-                if (isalnum(chr) || chr == '_')
+                if (isalnum(m_CC) || m_CC == '_')
                 {
-                    sl = m_SL;
-                    state = TokenizerState_Name;
-                    value += static_cast<char>(chr);
+                    loc = m_Location;
+                    state = State_Name;
+                    value += static_cast<char>(m_CC);
                     break;
                 }
 
-                if (is_operator(chr))
+                if (is_operator(m_CC))
                 {
-                    sl = m_SL;
-                    state = TokenizerState_Operator;
-                    value += static_cast<char>(chr);
+                    loc = m_Location;
+                    state = State_Operator;
+                    value += static_cast<char>(m_CC);
                     break;
                 }
 
-                sl = m_SL;
-                value += static_cast<char>(chr);
-                chr = Get();
+                loc = m_Location;
+                value += static_cast<char>(m_CC);
+                m_CC = Get();
 
-                if (value[0] == '.' && isdigit(chr))
+                if (value[0] == '.' && isdigit(m_CC))
                 {
-                    state = TokenizerState_Dec;
+                    state = State_Dec;
                     isfloat = true;
-                    value += static_cast<char>(chr);
+                    value += static_cast<char>(m_CC);
                     break;
                 }
 
-                return {sl, TokenType_Other, value};
+                return {loc, TokenType_Other, value};
             }
             break;
 
-        case TokenizerState_Comment:
-            if (chr == '#')
-                state = TokenizerState_Normal;
-            else if (chr == '\n')
+        case State_Comment:
+            if (m_CC == '#')
+                state = State_Normal;
+            else if (m_CC == '\n')
                 NewLine();
             break;
 
-        case TokenizerState_String:
-            if (chr == '"')
+        case State_String:
+            if (m_CC != '"')
             {
-                chr = Get();
-                return {sl, TokenType_String, value};
-            }
-            if (chr == '\\')
-                Escape();
-            value += static_cast<char>(chr);
-            break;
-
-        case TokenizerState_Char:
-            if (chr == '\'')
-            {
-                chr = Get();
-                return {sl, TokenType_Char, value};
-            }
-            if (chr == '\\')
-                Escape();
-            value += static_cast<char>(chr);
-            break;
-
-        case TokenizerState_Radix:
-            if (chr == 'b' || chr == 'B')
-            {
-                state = TokenizerState_Bin;
+                if (m_CC == '\\')
+                    Escape();
+                value += static_cast<char>(m_CC);
                 break;
             }
-            if (chr == 'x' || chr == 'X')
+            m_CC = Get();
+            return {loc, TokenType_String, value};
+
+        case State_Char:
+            if (m_CC != '\'')
             {
-                state = TokenizerState_Hex;
+                if (m_CC == '\\')
+                    Escape();
+                value += static_cast<char>(m_CC);
                 break;
             }
-            if (chr == '.')
+            m_CC = Get();
+            return {loc, TokenType_Char, value};
+
+        case State_Radix:
+            if (m_CC == 'b' || m_CC == 'B')
             {
-                state = TokenizerState_Dec;
+                state = State_Bin;
+                break;
+            }
+            if (m_CC == 'x' || m_CC == 'X')
+            {
+                state = State_Hex;
+                break;
+            }
+            if (m_CC == '.')
+            {
+                state = State_Dec;
                 isfloat = true;
                 value += "0.";
                 break;
             }
-            if (is_oct_digit(chr))
+            if (is_oct_digit(m_CC))
             {
-                state = TokenizerState_Oct;
-                value += static_cast<char>(chr);
+                state = State_Oct;
+                value += static_cast<char>(m_CC);
                 break;
             }
-            return {sl, TokenType_Dec, "0"};
+            return {loc, TokenType_Dec, "0"};
 
-        case TokenizerState_Bin:
-            if (chr == '0' || chr == '1' || chr == 'u')
+        case State_Bin:
+            if (m_CC == '0' || m_CC == '1' || m_CC == 'u')
             {
-                value += static_cast<char>(chr);
+                value += static_cast<char>(m_CC);
                 break;
             }
-            return {sl, TokenType_Bin, value};
+            return {loc, TokenType_Bin, value};
 
-        case TokenizerState_Oct:
-            if (is_oct_digit(chr) || chr == 'u')
+        case State_Oct:
+            if (is_oct_digit(m_CC) || m_CC == 'u')
             {
-                value += static_cast<char>(chr);
+                value += static_cast<char>(m_CC);
                 break;
             }
-            return {sl, TokenType_Oct, value};
+            return {loc, TokenType_Oct, value};
 
-        case TokenizerState_Dec:
-            if (chr == '.')
+        case State_Dec:
+            if (m_CC == '.')
             {
                 isfloat = true;
-                value += static_cast<char>(chr);
+                value += static_cast<char>(m_CC);
                 break;
             }
-            if (isdigit(chr) || chr == 'u')
+            if (isdigit(m_CC) || m_CC == 'u')
             {
-                value += static_cast<char>(chr);
+                value += static_cast<char>(m_CC);
                 break;
             }
-            return {sl, isfloat ? TokenType_Float : TokenType_Dec, value};
+            return {loc, isfloat ? TokenType_Float : TokenType_Dec, value};
 
-        case TokenizerState_Hex:
-            if (isxdigit(chr) || chr == 'u')
+        case State_Hex:
+            if (isxdigit(m_CC) || m_CC == 'u')
             {
-                value += static_cast<char>(chr);
+                value += static_cast<char>(m_CC);
                 break;
             }
-            return {sl, TokenType_Hex, value};
+            return {loc, TokenType_Hex, value};
 
-        case TokenizerState_Name:
-            if (!isalnum(chr) && chr != '_')
-                return {sl, TokenType_Name, value};
-            value += static_cast<char>(chr);
-            break;
+        case State_Name:
+            if (isalnum(m_CC) || m_CC == '_')
+            {
+                value += static_cast<char>(m_CC);
+                break;
+            }
+            return {loc, TokenType_Name, value};
 
-        case TokenizerState_Operator:
-            if (!is_compound_operator(chr))
-                return {sl, TokenType_Operator, value};
-            value += static_cast<char>(chr);
-            break;
+        case State_Operator:
+            if (is_operator(m_CC))
+            {
+                value += static_cast<char>(m_CC);
+                break;
+            }
+            return {loc, TokenType_Operator, value};
         }
 
-        chr = Get();
+        m_CC = Get();
     }
 
-    return {m_SL, TokenType_EOF, ""};
+    return {m_Location, TokenType_EOF, ""};
 }
 
 Brewer::ExprPtr Brewer::Parser::ParseBinary()
 {
-    return ParseBinary(ParseCall(), 0);
+    auto lhs = ParseCall();
+    if (!lhs) return {};
+    return ParseBinary(std::move(lhs), 0);
 }
 
 static int get_precedence(const std::string& op)
@@ -456,10 +477,12 @@ Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const int min_precedenc
         const auto precedence = get_precedence(Value);
 
         ExprPtr rhs = ParseCall();
+        if (!rhs) return {};
         while (At(TokenType_Operator) && get_precedence(Current().Value) > precedence)
         {
             const auto next_precedence = get_precedence(Current().Value);
             rhs = ParseBinary(std::move(rhs), precedence + (next_precedence > precedence ? 1 : 0));
+            if (!rhs) return {};
         }
 
         lhs = std::make_unique<BinaryExpression>(Location, Value, std::move(lhs), std::move(rhs));
@@ -471,6 +494,7 @@ Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const int min_precedenc
 Brewer::ExprPtr Brewer::Parser::ParseCall()
 {
     auto base = ParseCall(ParseUnary());
+    if (!base) return {};
     if (At("["))
         base = ParseIndex(std::move(base));
     return base;
@@ -500,7 +524,9 @@ Brewer::ExprPtr Brewer::Parser::ParseCall(ExprPtr callee)
 
 Brewer::ExprPtr Brewer::Parser::ParseUnary()
 {
-    return ParseUnary(ParseIndex());
+    auto operand = ParseIndex();
+    if (!operand) return {};
+    return ParseUnary(std::move(operand));
 }
 
 Brewer::ExprPtr Brewer::Parser::ParseUnary(ExprPtr operand)
@@ -516,7 +542,9 @@ Brewer::ExprPtr Brewer::Parser::ParseUnary(ExprPtr operand)
 
 Brewer::ExprPtr Brewer::Parser::ParseIndex()
 {
-    return ParseIndex(ParsePrimary());
+    auto base = ParsePrimary();
+    if (!base) return {};
+    return ParseIndex(std::move(base));
 }
 
 Brewer::ExprPtr Brewer::Parser::ParseIndex(ExprPtr base)
@@ -568,6 +596,11 @@ Brewer::ExprPtr Brewer::Parser::ParsePrimary()
     if (At(TokenType_String)) return std::make_unique<ConstStringExpression>(loc, Skip().Value);
 
     const auto [Location, Type, Value] = Skip();
-    return std::cerr << "at " << Location << ": unhandled token '" << Value << "' (" << Type << ")" <<
-        std::endl << ErrMark<ExprPtr>();
+    return std::cerr
+        << "at " << Location << ": "
+        << "unhandled token "
+        << "'" << Value << "' "
+        << "(" << Type << ")"
+        << std::endl
+        << ErrMark<ExprPtr>();
 }

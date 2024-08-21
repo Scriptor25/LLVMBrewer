@@ -42,6 +42,7 @@ Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
     for (size_t i = 0; i < args.size(); ++i)
     {
         auto arg = Args[i]->GenIR(builder);
+        if (!arg) return {};
         arg = builder.GenCast(arg, type->Param(i));
         if (!arg) return {};
         args[i] = arg->Get();

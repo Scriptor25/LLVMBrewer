@@ -513,7 +513,7 @@ Brewer::ValuePtr Brewer::Builder::GenCast(const ValuePtr& value, const TypePtr& 
     }
 
     return std::cerr
-        << "undefined cast from "
+        << "cannot cast from "
         << value_type
         << " to "
         << type

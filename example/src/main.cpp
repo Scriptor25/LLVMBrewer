@@ -22,6 +22,7 @@ static Brewer::StmtPtr parse_def(Brewer::Parser& p)
     auto [Location, Type, Value] = p.Expect("def");
     auto proto = parse_proto(p);
     auto body = p.ParseExpr();
+    if (!body) return {};
     return std::make_unique<Test::FunctionStatement>(Location, proto, std::move(body));
 }
 
@@ -36,10 +37,13 @@ static Brewer::ExprPtr parse_if(Brewer::Parser& p)
 {
     auto [Location, Type, Value] = p.Expect("if");
     auto condition = p.ParseExpr();
+    if (!condition) return {};
     p.Expect("then");
     auto then = p.ParseExpr();
+    if (!then) return {};
     p.Expect("else");
     auto else_ = p.ParseExpr();
+    if (!else_) return {};
     return std::make_unique<Test::IfExpression>(Location, std::move(condition), std::move(then), std::move(else_));
 }
 
@@ -70,7 +74,7 @@ int main(const int argc, const char** argv)
         .ParseStmtFn("def", parse_def)
         .ParseStmtFn("extern", parse_extern)
         .ParseExprFn("if", parse_if)
-        .DumpAST()
+        //.DumpAST()
         .ModuleID(module_id)
         .DumpIR()
         .BuildAndEmit(output_filename);

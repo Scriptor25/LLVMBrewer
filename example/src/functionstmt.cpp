@@ -1,7 +1,9 @@
 #include <iostream>
 #include <Brewer/Builder.hpp>
 #include <Brewer/Type.hpp>
+#include <Brewer/Util.hpp>
 #include <Brewer/Value.hpp>
+#include <llvm/IR/Verifier.h>
 #include <Test/AST.hpp>
 
 Test::FunctionStatement::FunctionStatement(const Brewer::SourceLocation& loc,
@@ -34,16 +36,30 @@ Brewer::ValuePtr Test::FunctionStatement::GenIR(Brewer::Builder& builder) const
     }
 
     const auto return_value = Body->GenIR(builder);
+    builder.Pop();
+
     if (!return_value)
     {
-        builder.Pop();
         builder.IRBuilder().SetInsertPoint(bkp);
         fn->erase(fn->begin(), fn->end());
         return {};
     }
 
     builder.IRBuilder().CreateRet(return_value->Get());
-    builder.Pop();
     builder.IRBuilder().SetInsertPoint(bkp);
+
+    if (verifyFunction(*fn, &llvm::errs()))
+    {
+        llvm::errs() << "-----------------------------------------------------------------\n";
+        fn->print(llvm::errs(), nullptr);
+        llvm::errs() << "-----------------------------------------------------------------\n";
+        fn->erase(fn->begin(), fn->end());
+        return std::cerr
+            << "at " << Location << ": "
+            << "failed to verify function"
+            << std::endl
+            << Brewer::ErrMark<Brewer::ValuePtr>();
+    }
+
     return Brewer::RValue::Direct(builder, Brewer::PointerType::Get(Proto.GetType()), fn);
 }

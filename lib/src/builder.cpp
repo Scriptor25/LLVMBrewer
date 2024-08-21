@@ -18,12 +18,12 @@ Brewer::ValuePtr Brewer::Builder::GenEQ(Builder& builder, const ValuePtr& lhs, c
     if (type->IsInt())
     {
         const auto result = builder.IRBuilder().CreateICmpEQ(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
     if (type->IsFloat())
     {
         const auto result = builder.IRBuilder().CreateFCmpOEQ(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
 
     return {};
@@ -36,12 +36,12 @@ Brewer::ValuePtr Brewer::Builder::GenNE(Builder& builder, const ValuePtr& lhs, c
     if (type->IsInt())
     {
         const auto result = builder.IRBuilder().CreateICmpNE(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
     if (type->IsFloat())
     {
         const auto result = builder.IRBuilder().CreateFCmpONE(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
 
     return {};
@@ -54,12 +54,12 @@ Brewer::ValuePtr Brewer::Builder::GenLT(Builder& builder, const ValuePtr& lhs, c
     if (type->IsInt())
     {
         const auto result = builder.IRBuilder().CreateICmpSLT(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
     if (type->IsFloat())
     {
         const auto result = builder.IRBuilder().CreateFCmpOLT(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
 
     return {};
@@ -72,12 +72,12 @@ Brewer::ValuePtr Brewer::Builder::GenGT(Builder& builder, const ValuePtr& lhs, c
     if (type->IsInt())
     {
         const auto result = builder.IRBuilder().CreateICmpSGT(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
     if (type->IsFloat())
     {
         const auto result = builder.IRBuilder().CreateFCmpOGT(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
 
     return {};
@@ -90,12 +90,12 @@ Brewer::ValuePtr Brewer::Builder::GenLE(Builder& builder, const ValuePtr& lhs, c
     if (type->IsInt())
     {
         const auto result = builder.IRBuilder().CreateICmpSLE(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
     if (type->IsFloat())
     {
         const auto result = builder.IRBuilder().CreateFCmpOLE(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
 
     return {};
@@ -108,12 +108,12 @@ Brewer::ValuePtr Brewer::Builder::GenGE(Builder& builder, const ValuePtr& lhs, c
     if (type->IsInt())
     {
         const auto result = builder.IRBuilder().CreateICmpSGE(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
     if (type->IsFloat())
     {
         const auto result = builder.IRBuilder().CreateFCmpOGE(lhs->Get(), rhs->Get());
-        return RValue::Direct(builder, Type::Get("i1"), result);
+        return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
     }
 
     return {};
@@ -125,7 +125,7 @@ Brewer::ValuePtr Brewer::Builder::GenLAnd(Builder& builder, const ValuePtr& lhs,
     const auto r = builder.IRBuilder().CreateIsNotNull(rhs->Get());
 
     const auto result = builder.IRBuilder().CreateAnd(l, r);
-    return RValue::Direct(builder, Type::Get("i1"), result);
+    return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
 Brewer::ValuePtr Brewer::Builder::GenLOr(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
@@ -134,7 +134,7 @@ Brewer::ValuePtr Brewer::Builder::GenLOr(Builder& builder, const ValuePtr& lhs, 
     const auto r = builder.IRBuilder().CreateIsNotNull(rhs->Get());
 
     const auto result = builder.IRBuilder().CreateOr(l, r);
-    return RValue::Direct(builder, Type::Get("i1"), result);
+    return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
 Brewer::ValuePtr Brewer::Builder::GenLXor(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
@@ -143,7 +143,7 @@ Brewer::ValuePtr Brewer::Builder::GenLXor(Builder& builder, const ValuePtr& lhs,
     const auto r = builder.IRBuilder().CreateIsNotNull(rhs->Get());
 
     const auto result = builder.IRBuilder().CreateXor(l, r);
-    return RValue::Direct(builder, Type::Get("i1"), result);
+    return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
 Brewer::ValuePtr Brewer::Builder::GenAdd(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
@@ -274,13 +274,13 @@ Brewer::ValuePtr Brewer::Builder::GenAShr(Builder& builder, const ValuePtr& lhs,
 
 Brewer::ValuePtr Brewer::Builder::GenInc(Builder& builder, const ValuePtr& val)
 {
-    const auto one = builder.IRBuilder().getIntN(val->GetType()->Size(), 1);
+    const auto one = builder.IRBuilder().getIntN(val->GetType()->GetSize(), 1);
     return builder.GenBinaryFn("+")(builder, val, RValue::Direct(builder, val->GetType(), one));
 }
 
 Brewer::ValuePtr Brewer::Builder::GenDec(Builder& builder, const ValuePtr& val)
 {
-    const auto one = builder.IRBuilder().getIntN(val->GetType()->Size(), 1);
+    const auto one = builder.IRBuilder().getIntN(val->GetType()->GetSize(), 1);
     return builder.GenBinaryFn("-")(builder, val, RValue::Direct(builder, val->GetType(), one));
 }
 
@@ -305,7 +305,7 @@ Brewer::ValuePtr Brewer::Builder::GenNeg(Builder& builder, const ValuePtr& val)
 Brewer::ValuePtr Brewer::Builder::GenLNot(Builder& builder, const ValuePtr& val)
 {
     const auto result = builder.IRBuilder().CreateIsNull(val->Get());
-    return RValue::Direct(builder, Type::Get("i1"), result);
+    return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
 Brewer::ValuePtr Brewer::Builder::GenNot(Builder& builder, const ValuePtr& val)
@@ -314,12 +314,13 @@ Brewer::ValuePtr Brewer::Builder::GenNot(Builder& builder, const ValuePtr& val)
     return RValue::Direct(builder, val->GetType(), result);
 }
 
-Brewer::Builder::Builder(const std::string& module_id, const std::string& filename)
+Brewer::Builder::Builder(Context& context, const std::string& module_id, const std::string& filename)
+    : m_Context(context)
 {
-    m_Context = std::make_unique<llvm::LLVMContext>();
-    m_IRBuilder = std::make_unique<llvm::IRBuilder<>>(*m_Context);
-    m_Module = std::make_unique<llvm::Module>(module_id, *m_Context);
-    m_Module->setSourceFileName(filename);
+    m_IRContext = std::make_unique<llvm::LLVMContext>();
+    m_IRBuilder = std::make_unique<llvm::IRBuilder<>>(*m_IRContext);
+    m_IRModule = std::make_unique<llvm::Module>(module_id, *m_IRContext);
+    m_IRModule->setSourceFileName(filename);
 
     m_BinaryFns["=="] = GenEQ;
     m_BinaryFns["!="] = GenNE;
@@ -347,9 +348,14 @@ Brewer::Builder::Builder(const std::string& module_id, const std::string& filena
     m_UnaryFns["~"] = GenNot;
 }
 
-llvm::LLVMContext& Brewer::Builder::Context() const
+Brewer::Context& Brewer::Builder::GetContext() const
 {
-    return *m_Context;
+    return m_Context;
+}
+
+llvm::LLVMContext& Brewer::Builder::IRContext() const
+{
+    return *m_IRContext;
 }
 
 llvm::IRBuilder<>& Brewer::Builder::IRBuilder() const
@@ -357,9 +363,9 @@ llvm::IRBuilder<>& Brewer::Builder::IRBuilder() const
     return *m_IRBuilder;
 }
 
-llvm::Module& Brewer::Builder::Module() const
+llvm::Module& Brewer::Builder::IRModule() const
 {
-    return *m_Module;
+    return *m_IRModule;
 }
 
 Brewer::BinaryFn& Brewer::Builder::GenBinaryFn(const std::string& operator_)
@@ -374,7 +380,7 @@ Brewer::UnaryFn& Brewer::Builder::GenUnaryFn(const std::string& operator_)
 
 void Brewer::Builder::Dump() const
 {
-    m_Module->print(llvm::outs(), nullptr);
+    m_IRModule->print(llvm::errs(), nullptr);
 }
 
 void Brewer::Builder::EmitToFile(const std::string& filename) const
@@ -386,7 +392,7 @@ void Brewer::Builder::EmitToFile(const std::string& filename) const
     llvm::InitializeAllAsmPrinters();
 
     const auto triple = llvm::sys::getDefaultTargetTriple();
-    m_Module->setTargetTriple(triple);
+    m_IRModule->setTargetTriple(triple);
 
     std::string error;
     const auto target = llvm::TargetRegistry::lookupTarget(triple, error);
@@ -403,7 +409,7 @@ void Brewer::Builder::EmitToFile(const std::string& filename) const
     const llvm::TargetOptions opt;
     const auto machine = target->createTargetMachine(triple, cpu, features, opt, llvm::Reloc::PIC_);
 
-    m_Module->setDataLayout(machine->createDataLayout());
+    m_IRModule->setDataLayout(machine->createDataLayout());
 
     std::error_code ec;
     llvm::raw_fd_ostream dest(filename, ec, llvm::sys::fs::OF_None);
@@ -421,7 +427,7 @@ void Brewer::Builder::EmitToFile(const std::string& filename) const
         return;
     }
 
-    pass.run(*m_Module);
+    pass.run(*m_IRModule);
     dest.flush();
 }
 

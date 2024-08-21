@@ -1,24 +1,12 @@
 #include <iostream>
-#include <map>
 #include <Brewer/Builder.hpp>
+#include <Brewer/Context.hpp>
 #include <Brewer/Type.hpp>
 #include <Brewer/Util.hpp>
 
-Brewer::TypePtr& Brewer::Type::Get(const std::string& name)
+Brewer::TypePtr& Brewer::Type::Get(Context& context, const std::string& name)
 {
-    static std::map<std::string, TypePtr> types{
-        {"void", std::make_shared<Type>("void", Type_Void, 0)},
-        {"i1", std::make_shared<Type>("i1", Type_Integer, 1)},
-        {"i8", std::make_shared<Type>("i8", Type_Integer, 8)},
-        {"i16", std::make_shared<Type>("i16", Type_Integer, 16)},
-        {"i32", std::make_shared<Type>("i32", Type_Integer, 32)},
-        {"i64", std::make_shared<Type>("i64", Type_Integer, 64)},
-        {"f16", std::make_shared<Type>("f16", Type_Float, 16)},
-        {"f32", std::make_shared<Type>("f32", Type_Float, 32)},
-        {"f64", std::make_shared<Type>("f64", Type_Float, 64)},
-    };
-
-    return types[name];
+    return context.GetType(name);
 }
 
 Brewer::TypePtr Brewer::Type::GetHigherOrder(const TypePtr& a, const TypePtr& b)
@@ -30,7 +18,7 @@ Brewer::TypePtr Brewer::Type::GetHigherOrder(const TypePtr& a, const TypePtr& b)
     {
         if (b->IsInt())
         {
-            if (a->Size() >= b->Size())
+            if (a->GetSize() >= b->GetSize())
                 return a;
             return b;
         }
@@ -49,7 +37,7 @@ Brewer::TypePtr Brewer::Type::GetHigherOrder(const TypePtr& a, const TypePtr& b)
 
         if (b->IsFloat())
         {
-            if (a->Size() >= b->Size())
+            if (a->GetSize() >= b->GetSize())
                 return a;
             return b;
         }
@@ -76,8 +64,8 @@ Brewer::TypePtr Brewer::Type::GetHigherOrder(const TypePtr& a, const TypePtr& b)
         << ErrMark<TypePtr>();
 }
 
-Brewer::Type::Type(std::string name, const TypeID id, const size_t size)
-    : m_Name(std::move(name)), m_ID(id), m_Size(size)
+Brewer::Type::Type(Context& context, std::string name, const TypeID id, const size_t size)
+    : m_Context(context), m_Name(std::move(name)), m_ID(id), m_Size(size)
 {
 }
 
@@ -101,12 +89,17 @@ llvm::Type* Brewer::Type::GenIR(Builder& builder) const
     }
 }
 
-const std::string& Brewer::Type::Name() const
+Brewer::Context& Brewer::Type::GetContext() const
+{
+    return m_Context;
+}
+
+const std::string& Brewer::Type::GetName() const
 {
     return m_Name;
 }
 
-size_t Brewer::Type::Size() const
+size_t Brewer::Type::GetSize() const
 {
     return m_Size;
 }
@@ -188,21 +181,21 @@ bool Brewer::Type::IsFunction() const
 
 Brewer::PointerTypePtr Brewer::PointerType::Get(const TypePtr& base)
 {
-    const auto name = base->Name() + "*";
-    auto& type = Type::Get(name);
+    const auto name = base->GetName() + "*";
+    auto& type = Type::Get(base->GetContext(), name);
     if (!type)
         type = std::make_shared<PointerType>(name, base);
     return std::dynamic_pointer_cast<PointerType>(type);
 }
 
-Brewer::PointerType::PointerType(const std::string& name, TypePtr base)
-    : Type(name, Type_Pointer, 64), m_Base(std::move(base))
+Brewer::PointerType::PointerType(const std::string& name, const TypePtr& base)
+    : Type(base->GetContext(), name, Type_Pointer, 64), m_Base(base)
 {
 }
 
 llvm::PointerType* Brewer::PointerType::GenIR(Builder& builder) const
 {
-    return llvm::PointerType::get(builder.Context(), 0);
+    return llvm::PointerType::get(builder.IRContext(), 0);
 }
 
 Brewer::TypePtr Brewer::PointerType::Base() const
@@ -212,15 +205,15 @@ Brewer::TypePtr Brewer::PointerType::Base() const
 
 Brewer::ArrayTypePtr Brewer::ArrayType::Get(const TypePtr& base, const size_t length)
 {
-    auto name = base->Name() + '[' + std::to_string(length) + ']';
-    auto& type = Type::Get(name);
+    auto name = base->GetName() + '[' + std::to_string(length) + ']';
+    auto& type = Type::Get(base->GetContext(), name);
     if (!type)
         type = std::make_shared<ArrayType>(name, base, length);
     return std::dynamic_pointer_cast<ArrayType>(type);
 }
 
 Brewer::ArrayType::ArrayType(const std::string& name, const TypePtr& base, const size_t length)
-    : Type(name, Type_Array, base->Size() * length), m_Base(base), m_Length(length)
+    : Type(base->GetContext(), name, Type_Array, base->GetSize() * length), m_Base(base), m_Length(length)
 {
 }
 
@@ -229,27 +222,50 @@ llvm::ArrayType* Brewer::ArrayType::GenIR(Builder& builder) const
     return llvm::ArrayType::get(m_Base->GenIR(builder), m_Length);
 }
 
+Brewer::TypePtr Brewer::ArrayType::Base() const
+{
+    return m_Base;
+}
+
+size_t Brewer::ArrayType::Length() const
+{
+    return m_Length;
+}
+
 
 Brewer::StructTypePtr Brewer::StructType::Get(const std::vector<TypePtr>& elements)
 {
     std::string name;
     size_t size = 0;
-    name += '{';
+    name += "{ ";
     for (size_t i = 0; i < elements.size(); ++i)
     {
-        if (i > 0) name += ',';
-        name += elements[i]->Name();
-        size += elements[i]->Size();
+        if (i > 0) name += ", ";
+        name += elements[i]->GetName();
+        size += elements[i]->GetSize();
     }
-    name += '}';
-    auto& type = Type::Get(name);
+    name += " }";
+    auto& type = Type::Get(elements[0]->GetContext(), name);
     if (!type)
-        type = std::make_shared<StructType>(name, size, elements);
+        type = std::make_shared<StructType>(elements[0]->GetContext(), name, size, elements);
     return std::dynamic_pointer_cast<StructType>(type);
 }
 
-Brewer::StructType::StructType(const std::string& name, const size_t size, const std::vector<TypePtr>& elements)
-    : Type(name, Type_Struct, size), m_Elements(elements)
+Brewer::StructTypePtr Brewer::StructType::Get(Context& context)
+{
+    std::string name = "{}";
+
+    auto& type = Type::Get(context, name);
+    if (!type)
+        type = std::make_shared<StructType>(context, name, 0, std::vector<TypePtr>());
+    return std::dynamic_pointer_cast<StructType>(type);
+}
+
+Brewer::StructType::StructType(Context& context,
+                               const std::string& name,
+                               const size_t size,
+                               const std::vector<TypePtr>& elements)
+    : Type(context, name, Type_Struct, size), m_Elements(elements)
 {
 }
 
@@ -258,18 +274,18 @@ llvm::StructType* Brewer::StructType::GenIR(Builder& builder) const
     std::vector<llvm::Type*> elements(m_Elements.size());
     for (size_t i = 0; i < elements.size(); ++i)
         elements[i] = m_Elements[i]->GenIR(builder);
-    return llvm::StructType::get(builder.Context(), elements, false);
+    return llvm::StructType::get(builder.IRContext(), elements, false);
 }
 
 Brewer::FunctionTypePtr Brewer::FunctionType::Get(const TypePtr& result,
                                                   const std::vector<TypePtr>& params,
                                                   const bool vararg)
 {
-    std::string name = result->Name() + '(';
+    std::string name = result->GetName() + '(';
     for (size_t i = 0; i < params.size(); ++i)
     {
         if (i > 0) name += ',';
-        name += params[i]->Name();
+        name += params[i]->GetName();
     }
     if (vararg)
     {
@@ -278,7 +294,7 @@ Brewer::FunctionTypePtr Brewer::FunctionType::Get(const TypePtr& result,
         name += '?';
     }
     name += ')';
-    auto& type = Type::Get(name);
+    auto& type = Type::Get(result->GetContext(), name);
     if (!type)
         type = std::make_shared<FunctionType>(name, result, params, vararg);
     return std::dynamic_pointer_cast<FunctionType>(type);
@@ -288,7 +304,10 @@ Brewer::FunctionType::FunctionType(const std::string& name,
                                    TypePtr result,
                                    const std::vector<TypePtr>& params,
                                    const bool vararg)
-    : Type(name, Type_Function, 0), m_Result(std::move(result)), m_Params(params), m_VarArg(vararg)
+    : Type(result->GetContext(), name, Type_Function, 0),
+      m_Result(std::move(result)),
+      m_Params(params),
+      m_VarArg(vararg)
 {
 }
 

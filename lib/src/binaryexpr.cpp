@@ -5,10 +5,14 @@
 #include <Brewer/Value.hpp>
 
 Brewer::BinaryExpression::BinaryExpression(const SourceLocation& loc,
+                                           const TypePtr& type,
                                            std::string operator_,
                                            ExprPtr lhs,
                                            ExprPtr rhs)
-    : Expression(loc), Operator(std::move(operator_)), LHS(std::move(lhs)), RHS(std::move(rhs))
+    : Expression(loc, type),
+      Operator(std::move(operator_)),
+      LHS(std::move(lhs)),
+      RHS(std::move(rhs))
 {
 }
 

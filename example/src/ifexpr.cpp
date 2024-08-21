@@ -4,10 +4,11 @@
 #include <Test/AST.hpp>
 
 Test::IfExpression::IfExpression(const Brewer::SourceLocation& loc,
+                                 const Brewer::TypePtr& type,
                                  Brewer::ExprPtr condition,
                                  Brewer::ExprPtr then,
                                  Brewer::ExprPtr else_)
-    : Expression(loc), Condition(std::move(condition)), Then(std::move(then)), Else(std::move(else_))
+    : Expression(loc, type), Condition(std::move(condition)), Then(std::move(then)), Else(std::move(else_))
 {
 }
 
@@ -20,9 +21,9 @@ Brewer::ValuePtr Test::IfExpression::GenIR(Brewer::Builder& builder) const
 {
     const auto bkp = builder.IRBuilder().GetInsertBlock();
     const auto f = bkp->getParent();
-    auto then_bb = llvm::BasicBlock::Create(builder.Context(), "then", f);
-    auto else_bb = llvm::BasicBlock::Create(builder.Context(), "else", f);
-    const auto end_bb = llvm::BasicBlock::Create(builder.Context(), "end", f);
+    auto then_bb = llvm::BasicBlock::Create(builder.IRContext(), "then", f);
+    auto else_bb = llvm::BasicBlock::Create(builder.IRContext(), "else", f);
+    const auto end_bb = llvm::BasicBlock::Create(builder.IRContext(), "end", f);
 
     const auto condition = Condition->GenIR(builder);
     if (!condition) return {};

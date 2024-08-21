@@ -15,19 +15,24 @@ namespace Brewer
 
         virtual ~Statement();
         virtual std::ostream& Dump(std::ostream&) const = 0;
-        virtual ValuePtr GenIR(Builder&) const = 0;
+        virtual void GenIRNoVal(Builder&) const = 0;
 
         SourceLocation Location;
     };
 
     struct Expression : Statement
     {
-        explicit Expression(const SourceLocation& loc);
+        Expression(const SourceLocation& loc, TypePtr type);
+        void GenIRNoVal(Builder&) const override;
+
+        virtual ValuePtr GenIR(Builder&) const = 0;
+
+        TypePtr Type;
     };
 
     struct BinaryExpression : Expression
     {
-        BinaryExpression(const SourceLocation& loc, std::string operator_, ExprPtr lhs, ExprPtr rhs);
+        BinaryExpression(const SourceLocation&, const TypePtr&, std::string operator_, ExprPtr lhs, ExprPtr rhs);
 
         std::ostream& Dump(std::ostream&) const override;
         ValuePtr GenIR(Builder&) const override;
@@ -39,7 +44,7 @@ namespace Brewer
 
     struct CallExpression : Expression
     {
-        CallExpression(const SourceLocation& loc, ExprPtr callee, std::vector<ExprPtr>& args);
+        CallExpression(const SourceLocation&, const TypePtr&, ExprPtr callee, std::vector<ExprPtr>& args);
 
         std::ostream& Dump(std::ostream&) const override;
         ValuePtr GenIR(Builder&) const override;
@@ -50,7 +55,7 @@ namespace Brewer
 
     struct ConstCharExpression : Expression
     {
-        ConstCharExpression(const SourceLocation& loc, char value);
+        ConstCharExpression(const SourceLocation&, const TypePtr&, char value);
 
         std::ostream& Dump(std::ostream&) const override;
         ValuePtr GenIR(Builder&) const override;
@@ -60,7 +65,7 @@ namespace Brewer
 
     struct ConstFloatExpression : Expression
     {
-        ConstFloatExpression(const SourceLocation& loc, double value);
+        ConstFloatExpression(const SourceLocation&, const TypePtr&, double value);
 
         std::ostream& Dump(std::ostream&) const override;
         ValuePtr GenIR(Builder&) const override;
@@ -70,7 +75,7 @@ namespace Brewer
 
     struct ConstIntExpression : Expression
     {
-        ConstIntExpression(const SourceLocation& loc, unsigned long long value);
+        ConstIntExpression(const SourceLocation&, const TypePtr&, size_t value);
 
         std::ostream& Dump(std::ostream&) const override;
         ValuePtr GenIR(Builder&) const override;
@@ -80,7 +85,7 @@ namespace Brewer
 
     struct ConstStringExpression : Expression
     {
-        ConstStringExpression(const SourceLocation& loc, std::string value);
+        ConstStringExpression(const SourceLocation&, const TypePtr&, std::string value);
 
         std::ostream& Dump(std::ostream&) const override;
         ValuePtr GenIR(Builder&) const override;
@@ -90,7 +95,7 @@ namespace Brewer
 
     struct IndexExpression : Expression
     {
-        IndexExpression(const SourceLocation& loc, ExprPtr base, ExprPtr index);
+        IndexExpression(const SourceLocation&, const TypePtr&, ExprPtr base, ExprPtr index);
 
         std::ostream& Dump(std::ostream&) const override;
         ValuePtr GenIR(Builder&) const override;
@@ -101,7 +106,7 @@ namespace Brewer
 
     struct SymbolExpression : Expression
     {
-        SymbolExpression(const SourceLocation& loc, std::string name);
+        SymbolExpression(const SourceLocation&, const TypePtr&, std::string name);
 
         std::ostream& Dump(std::ostream&) const override;
         ValuePtr GenIR(Builder&) const override;
@@ -111,7 +116,7 @@ namespace Brewer
 
     struct UnaryExpression : Expression
     {
-        UnaryExpression(const SourceLocation& loc, std::string operator_, ExprPtr operand, bool lh);
+        UnaryExpression(const SourceLocation&, const TypePtr&, std::string operator_, ExprPtr operand, bool lh);
 
         std::ostream& Dump(std::ostream&) const override;
         ValuePtr GenIR(Builder&) const override;

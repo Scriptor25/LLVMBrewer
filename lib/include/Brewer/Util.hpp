@@ -26,4 +26,15 @@ namespace Brewer
         }
         return stream;
     }
+
+    template <typename T, typename U>
+    std::unique_ptr<T> dynamic_pointer_cast(std::unique_ptr<U>&& u)
+    {
+        if (auto t = dynamic_cast<T*>(u.get()))
+        {
+            u.release();
+            return std::unique_ptr<T>(t);
+        }
+        return {};
+    }
 }

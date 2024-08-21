@@ -23,16 +23,17 @@ namespace Brewer
     class Type
     {
     public:
-        static TypePtr& Get(const std::string& name);
+        static TypePtr& Get(Context&, const std::string& name);
         static TypePtr GetHigherOrder(const TypePtr&, const TypePtr&);
 
-        Type(std::string name, TypeID id, size_t size);
+        Type(Context&, std::string name, TypeID id, size_t size);
         virtual ~Type();
 
         virtual llvm::Type* GenIR(Builder&) const;
 
-        [[nodiscard]] const std::string& Name() const;
-        [[nodiscard]] size_t Size() const;
+        [[nodiscard]] Context& GetContext() const;
+        [[nodiscard]] const std::string& GetName() const;
+        [[nodiscard]] size_t GetSize() const;
 
         [[nodiscard]] bool IsVoid() const;
 
@@ -49,11 +50,12 @@ namespace Brewer
         [[nodiscard]] bool IsFloat64() const;
 
         [[nodiscard]] bool IsPointer() const;
-        [[nodiscard]] bool IsFunction() const;
-        [[nodiscard]] bool IsStruct() const;
         [[nodiscard]] bool IsArray() const;
+        [[nodiscard]] bool IsStruct() const;
+        [[nodiscard]] bool IsFunction() const;
 
     private:
+        Context& m_Context;
         std::string m_Name;
         TypeID m_ID;
         size_t m_Size;
@@ -62,9 +64,9 @@ namespace Brewer
     class PointerType : public Type
     {
     public:
-        static std::shared_ptr<PointerType> Get(const TypePtr& base);
+        static PointerTypePtr Get(const TypePtr& base);
 
-        PointerType(const std::string& name, TypePtr base);
+        PointerType(const std::string& name, const TypePtr& base);
         llvm::PointerType* GenIR(Builder&) const override;
 
         [[nodiscard]] TypePtr Base() const;
@@ -76,11 +78,14 @@ namespace Brewer
     class ArrayType : public Type
     {
     public:
-        static std::shared_ptr<ArrayType> Get(const TypePtr& base, size_t length);
+        static ArrayTypePtr Get(const TypePtr& base, size_t length);
 
         ArrayType(const std::string& name, const TypePtr& base, size_t length);
 
         llvm::ArrayType* GenIR(Builder&) const override;
+
+        [[nodiscard]] TypePtr Base() const;
+        [[nodiscard]] size_t Length() const;
 
     private:
         TypePtr m_Base;
@@ -90,9 +95,10 @@ namespace Brewer
     class StructType : public Type
     {
     public:
-        static std::shared_ptr<StructType> Get(const std::vector<TypePtr>& elements);
+        static StructTypePtr Get(const std::vector<TypePtr>& elements);
+        static StructTypePtr Get(Context&);
 
-        StructType(const std::string& name, size_t size, const std::vector<TypePtr>& elements);
+        StructType(Context&, const std::string& name, size_t size, const std::vector<TypePtr>& elements);
 
         llvm::StructType* GenIR(Builder&) const override;
 
@@ -103,9 +109,9 @@ namespace Brewer
     class FunctionType : public Type
     {
     public:
-        static std::shared_ptr<FunctionType> Get(const TypePtr& result,
-                                                 const std::vector<TypePtr>& params,
-                                                 bool vararg);
+        static FunctionTypePtr Get(const TypePtr& result,
+                                   const std::vector<TypePtr>& params,
+                                   bool vararg);
 
         FunctionType(const std::string& name,
                      TypePtr result,

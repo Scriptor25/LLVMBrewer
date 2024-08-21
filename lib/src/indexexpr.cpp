@@ -1,7 +1,7 @@
 #include <Brewer/AST.hpp>
 
-Brewer::IndexExpression::IndexExpression(const SourceLocation& loc, ExprPtr base, ExprPtr index)
-    : Expression(loc), Base(std::move(base)), Index(std::move(index))
+Brewer::IndexExpression::IndexExpression(const SourceLocation& loc, const TypePtr& type, ExprPtr base, ExprPtr index)
+    : Expression(loc, type), Base(std::move(base)), Index(std::move(index))
 {
 }
 

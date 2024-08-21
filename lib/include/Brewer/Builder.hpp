@@ -41,11 +41,12 @@ namespace Brewer
         static ValuePtr GenLNot(Builder&, const ValuePtr& val);
         static ValuePtr GenNot(Builder&, const ValuePtr& val);
 
-        Builder(const std::string& module_id, const std::string& filename);
+        Builder(Context&, const std::string& module_id, const std::string& filename);
 
-        [[nodiscard]]  llvm::LLVMContext& Context() const;
-        [[nodiscard]]  llvm::IRBuilder<>& IRBuilder() const;
-        [[nodiscard]]  llvm::Module& Module() const;
+        [[nodiscard]] Context& GetContext() const;
+        [[nodiscard]] llvm::LLVMContext& IRContext() const;
+        [[nodiscard]] llvm::IRBuilder<>& IRBuilder() const;
+        [[nodiscard]] llvm::Module& IRModule() const;
 
         BinaryFn& GenBinaryFn(const std::string& operator_);
         UnaryFn& GenUnaryFn(const std::string& operator_);
@@ -60,9 +61,11 @@ namespace Brewer
         ValuePtr GenCast(const ValuePtr& value, const TypePtr& type);
 
     private:
-        std::unique_ptr<llvm::LLVMContext> m_Context;
+        Context& m_Context;
+
+        std::unique_ptr<llvm::LLVMContext> m_IRContext;
         std::unique_ptr<llvm::IRBuilder<>> m_IRBuilder;
-        std::unique_ptr<llvm::Module> m_Module;
+        std::unique_ptr<llvm::Module> m_IRModule;
 
         std::map<std::string, BinaryFn> m_BinaryFns;
         std::map<std::string, UnaryFn> m_UnaryFns;

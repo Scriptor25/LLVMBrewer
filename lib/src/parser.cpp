@@ -1,13 +1,18 @@
-#include <map>
-#include <stdexcept>
 #include <Brewer/AST.hpp>
+#include <Brewer/Context.hpp>
 #include <Brewer/Parser.hpp>
+#include <Brewer/Type.hpp>
 #include <Brewer/Util.hpp>
 
-Brewer::Parser::Parser(std::istream& stream, const std::string& filename)
-    : m_Stream(stream), m_Location{filename, 1, 0}
+Brewer::Parser::Parser(Context& context, std::istream& stream, const std::string& filename)
+    : m_Context(context), m_Stream(stream), m_Location{filename, 1, 0}
 {
     Next();
+}
+
+Brewer::Context& Brewer::Parser::GetContext() const
+{
+    return m_Context;
 }
 
 Brewer::StmtFn& Brewer::Parser::ParseStmtFn(const std::string& beg)
@@ -102,6 +107,85 @@ Brewer::StmtPtr Brewer::Parser::Parse()
         return fn(*this);
 
     return ParseExpr();
+}
+
+Brewer::TypePtr Brewer::Parser::ParseType()
+{
+    TypePtr type;
+
+    if (NextIfAt("struct"))
+    {
+        if (!NextIfAt("{"))
+        {
+            type = StructType::Get(m_Context);
+        }
+        else
+        {
+            std::vector<TypePtr> elements;
+            while (!NextIfAt("}"))
+            {
+                elements.push_back(ParseType());
+                if (!At("}")) Expect(",");
+            }
+            type = StructType::Get(elements);
+        }
+    }
+    else
+    {
+        auto [Location, Type, Value] = Expect(TokenType_Name);
+        type = m_Context.GetType(Value);
+        if (!type)
+            return std::cerr
+                << "at " << Location << ": "
+                << "undefined type " << Value
+                << std::endl
+                << ErrMark<TypePtr>();
+    }
+
+    while (true)
+    {
+        if (NextIfAt("*"))
+        {
+            type = PointerType::Get(type);
+            continue;
+        }
+
+        if (NextIfAt("["))
+        {
+            const auto length = dynamic_pointer_cast<ConstIntExpression>(ParseExpr());
+            auto [Location, Type, Value] = Expect("]");
+            if (!length)
+                return std::cerr
+                    << "at " << Location << ": "
+                    << "array length must be a constant int"
+                    << std::endl
+                    << ErrMark<TypePtr>();
+            type = ArrayType::Get(type, length->Value);
+            continue;
+        }
+
+        if (NextIfAt("("))
+        {
+            std::vector<TypePtr> params;
+            bool vararg = false;
+            while (!NextIfAt(")"))
+            {
+                if (NextIfAt("?"))
+                {
+                    vararg = true;
+                    Expect(")");
+                    break;
+                }
+
+                params.push_back(ParseType());
+                if (!At(")")) Expect(",");
+            }
+            type = FunctionType::Get(type, params, vararg);
+            continue;
+        }
+
+        return type;
+    }
 }
 
 Brewer::ExprPtr Brewer::Parser::ParseExpr()
@@ -485,7 +569,23 @@ Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const int min_precedenc
             if (!rhs) return {};
         }
 
-        lhs = std::make_unique<BinaryExpression>(Location, Value, std::move(lhs), std::move(rhs));
+        TypePtr type;
+        if (Value == "=="
+            || Value == "!="
+            || Value == "<="
+            || Value == ">="
+            || Value == "<"
+            || Value == ">"
+            || Value == "&&"
+            || Value == "||"
+            || Value == "^^")
+            type = m_Context.GetType("i1");
+        else if (Value.find('=') != std::string::npos)
+            type = lhs->Type;
+        else
+            type = Type::GetHigherOrder(lhs->Type, rhs->Type);
+
+        lhs = std::make_unique<BinaryExpression>(Location, type, Value, std::move(lhs), std::move(rhs));
     }
 
     return lhs;
@@ -516,7 +616,10 @@ Brewer::ExprPtr Brewer::Parser::ParseCall(ExprPtr callee)
                 Expect(",");
         }
 
-        callee = std::make_unique<CallExpression>(Location, std::move(callee), args);
+        auto type = std::dynamic_pointer_cast<FunctionType>(
+            std::dynamic_pointer_cast<PointerType>(callee->Type)->Base())->Result();
+
+        callee = std::make_unique<CallExpression>(Location, type, std::move(callee), args);
     }
 
     return callee;
@@ -534,7 +637,7 @@ Brewer::ExprPtr Brewer::Parser::ParseUnary(ExprPtr operand)
     if (At("++") || At("--"))
     {
         auto [Location, Type, Value] = Skip();
-        operand = std::make_unique<UnaryExpression>(Location, Value, std::move(operand), false);
+        operand = std::make_unique<UnaryExpression>(Location, operand->Type, Value, std::move(operand), false);
     }
 
     return operand;
@@ -556,7 +659,10 @@ Brewer::ExprPtr Brewer::Parser::ParseIndex(ExprPtr base)
         auto index = ParseExpr();
         Expect("]");
 
-        base = std::make_unique<IndexExpression>(Location, std::move(base), std::move(index));
+        TypePtr element;
+        if (const auto type = std::dynamic_pointer_cast<PointerType>(base->Type)) element = type->Base();
+        if (const auto type = std::dynamic_pointer_cast<ArrayType>(base->Type)) element = type->Base();
+        base = std::make_unique<IndexExpression>(Location, element, std::move(base), std::move(index));
     }
 
     return base;
@@ -583,17 +689,46 @@ Brewer::ExprPtr Brewer::Parser::ParsePrimary()
     {
         auto [Location, Type, Value] = Skip();
         auto operand = ParseCall();
-        return std::make_unique<UnaryExpression>(Location, Value, std::move(operand), true);
+        TypePtr type;
+        if (Value == "!") type = m_Context.GetType("i1");
+        else type = operand->Type;
+        return std::make_unique<UnaryExpression>(Location, type, Value, std::move(operand), true);
     }
 
-    if (At(TokenType_Name)) return std::make_unique<SymbolExpression>(loc, Skip().Value);
-    if (At(TokenType_Bin)) return std::make_unique<ConstIntExpression>(loc, std::stoull(Skip().Value, nullptr, 2));
-    if (At(TokenType_Oct)) return std::make_unique<ConstIntExpression>(loc, std::stoull(Skip().Value, nullptr, 8));
-    if (At(TokenType_Dec)) return std::make_unique<ConstIntExpression>(loc, std::stoull(Skip().Value, nullptr, 10));
-    if (At(TokenType_Hex)) return std::make_unique<ConstIntExpression>(loc, std::stoull(Skip().Value, nullptr, 16));
-    if (At(TokenType_Float)) return std::make_unique<ConstFloatExpression>(loc, std::stold(Skip().Value));
-    if (At(TokenType_Char)) return std::make_unique<ConstCharExpression>(loc, Skip().Value[0]);
-    if (At(TokenType_String)) return std::make_unique<ConstStringExpression>(loc, Skip().Value);
+    if (At(TokenType_Name))
+    {
+        auto [Location, Type, Value] = Skip();
+        auto type = m_Context.GetSymbol(Value);
+        return std::make_unique<SymbolExpression>(Location, type, Value);
+    }
+    if (At(TokenType_Bin))
+        return std::make_unique<ConstIntExpression>(loc,
+                                                    Type::Get(m_Context, "i64"),
+                                                    std::stoull(Skip().Value, nullptr, 2));
+    if (At(TokenType_Oct))
+        return std::make_unique<ConstIntExpression>(loc,
+                                                    Type::Get(m_Context, "i64"),
+                                                    std::stoull(Skip().Value, nullptr, 8));
+    if (At(TokenType_Dec))
+        return std::make_unique<ConstIntExpression>(loc,
+                                                    Type::Get(m_Context, "i64"),
+                                                    std::stoull(Skip().Value, nullptr, 10));
+    if (At(TokenType_Hex))
+        return std::make_unique<ConstIntExpression>(loc,
+                                                    Type::Get(m_Context, "i64"),
+                                                    std::stoull(Skip().Value, nullptr, 16));
+    if (At(TokenType_Float))
+        return std::make_unique<ConstFloatExpression>(loc,
+                                                      Type::Get(m_Context, "f64"),
+                                                      std::stold(Skip().Value));
+    if (At(TokenType_Char))
+        return std::make_unique<ConstCharExpression>(loc,
+                                                     Type::Get(m_Context, "i8"),
+                                                     Skip().Value[0]);
+    if (At(TokenType_String))
+        return std::make_unique<ConstStringExpression>(loc,
+                                                       PointerType::Get(Type::Get(m_Context, "i8")),
+                                                       Skip().Value);
 
     const auto [Location, Type, Value] = Skip();
     return std::cerr

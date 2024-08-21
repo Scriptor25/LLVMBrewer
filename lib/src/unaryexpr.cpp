@@ -5,10 +5,11 @@
 #include <Brewer/Value.hpp>
 
 Brewer::UnaryExpression::UnaryExpression(const SourceLocation& loc,
+                                         const TypePtr& type,
                                          std::string operator_,
                                          ExprPtr operand,
                                          const bool lh)
-    : Expression(loc), Operator(std::move(operator_)), Operand(std::move(operand)), LH(lh)
+    : Expression(loc, type), Operator(std::move(operator_)), Operand(std::move(operand)), LH(lh)
 {
 }
 

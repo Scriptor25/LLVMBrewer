@@ -1,15 +1,17 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 namespace Brewer
 {
-    // Frontend
+    class Context;
+
     struct SourceLocation;
     struct Token;
+
     class Parser;
 
-    // Backend
     class Builder;
 
     class Type;
@@ -32,14 +34,12 @@ namespace Brewer
     typedef std::shared_ptr<RValue> RValuePtr;
     typedef std::shared_ptr<LValue> LValuePtr;
 
-    // AST
     struct Statement;
     struct Expression;
 
     typedef std::unique_ptr<Statement> StmtPtr;
     typedef std::unique_ptr<Expression> ExprPtr;
 
-    // Pipeline
     class Pipeline;
 
     typedef std::function<StmtPtr(Parser&)> StmtFn;

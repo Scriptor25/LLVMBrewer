@@ -18,12 +18,12 @@ std::ostream& Test::FunctionStatement::Dump(std::ostream& stream) const
     return stream << "def " << Proto << ' ' << Body;
 }
 
-Brewer::ValuePtr Test::FunctionStatement::GenIR(Brewer::Builder& builder) const
+void Test::FunctionStatement::GenIRNoVal(Brewer::Builder& builder) const
 {
     const auto fn = Proto.GenIR(builder);
-    if (!fn || !fn->empty()) return {};
+    if (!fn || !fn->empty()) return;
 
-    const auto bb = llvm::BasicBlock::Create(builder.Context(), "entry", fn);
+    const auto bb = llvm::BasicBlock::Create(builder.IRContext(), "entry", fn);
     const auto bkp = builder.IRBuilder().GetInsertBlock();
     builder.IRBuilder().SetInsertPoint(bb);
 
@@ -32,7 +32,7 @@ Brewer::ValuePtr Test::FunctionStatement::GenIR(Brewer::Builder& builder) const
     {
         const auto name = Proto.Params[i];
         const auto param = fn->getArg(i);
-        builder[name] = Brewer::RValue::Direct(builder, Brewer::Type::Get("f64"), param);
+        builder[name] = Brewer::RValue::Direct(builder, Brewer::Type::Get(builder.GetContext(), "f64"), param);
     }
 
     const auto return_value = Body->GenIR(builder);
@@ -42,7 +42,7 @@ Brewer::ValuePtr Test::FunctionStatement::GenIR(Brewer::Builder& builder) const
     {
         builder.IRBuilder().SetInsertPoint(bkp);
         fn->erase(fn->begin(), fn->end());
-        return {};
+        return;
     }
 
     builder.IRBuilder().CreateRet(return_value->Get());
@@ -54,12 +54,9 @@ Brewer::ValuePtr Test::FunctionStatement::GenIR(Brewer::Builder& builder) const
         fn->print(llvm::errs(), nullptr);
         llvm::errs() << "-----------------------------------------------------------------\n";
         fn->erase(fn->begin(), fn->end());
-        return std::cerr
+        std::cerr
             << "at " << Location << ": "
             << "failed to verify function"
-            << std::endl
-            << Brewer::ErrMark<Brewer::ValuePtr>();
+            << std::endl;
     }
-
-    return Brewer::RValue::Direct(builder, Brewer::PointerType::Get(Proto.GetType()), fn);
 }

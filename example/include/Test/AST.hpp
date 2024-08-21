@@ -11,9 +11,10 @@ namespace Test
     struct Prototype
     {
         Prototype(std::string name, const std::vector<std::string>& params);
+
         std::ostream& Dump(std::ostream& stream) const;
         llvm::Function* GenIR(Brewer::Builder& builder) const;
-        [[nodiscard]] std::shared_ptr<Brewer::FunctionType> GetType() const;
+        [[nodiscard]] Brewer::FunctionTypePtr GetType(Brewer::Context&) const;
 
         std::string Name;
         std::vector<std::string> Params;
@@ -26,8 +27,9 @@ namespace Test
         FunctionStatement(const Brewer::SourceLocation& loc,
                           Prototype proto,
                           Brewer::ExprPtr body);
+
         std::ostream& Dump(std::ostream& stream) const override;
-        Brewer::ValuePtr GenIR(Brewer::Builder& builder) const override;
+        void GenIRNoVal(Brewer::Builder& builder) const override;
 
         Prototype Proto;
         Brewer::ExprPtr Body;
@@ -36,18 +38,21 @@ namespace Test
     struct ExternStatement : Brewer::Statement
     {
         ExternStatement(const Brewer::SourceLocation& loc, Prototype proto);
+
         std::ostream& Dump(std::ostream& stream) const override;
-        Brewer::ValuePtr GenIR(Brewer::Builder& builder) const override;
+        void GenIRNoVal(Brewer::Builder& builder) const override;
 
         Prototype Proto;
     };
 
     struct IfExpression : Brewer::Expression
     {
-        IfExpression(const Brewer::SourceLocation& loc,
+        IfExpression(const Brewer::SourceLocation&,
+                     const Brewer::TypePtr&,
                      Brewer::ExprPtr condition,
                      Brewer::ExprPtr then,
                      Brewer::ExprPtr else_);
+
         std::ostream& Dump(std::ostream& stream) const override;
         Brewer::ValuePtr GenIR(Brewer::Builder& builder) const override;
 

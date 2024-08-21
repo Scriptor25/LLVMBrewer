@@ -13,7 +13,9 @@ namespace Brewer
     class Parser
     {
     public:
-        Parser(std::istream& stream, const std::string& filename);
+        Parser(Context&, std::istream& stream, const std::string& filename);
+
+        [[nodiscard]] Context& GetContext() const;
 
         StmtFn& ParseStmtFn(const std::string&);
         ExprFn& ParseExprFn(const std::string&);
@@ -33,6 +35,7 @@ namespace Brewer
         Token Expect(const std::string&);
 
         StmtPtr Parse();
+        TypePtr ParseType();
         ExprPtr ParseExpr();
 
     private:
@@ -51,6 +54,7 @@ namespace Brewer
         ExprPtr ParseIndex(ExprPtr);
         ExprPtr ParsePrimary();
 
+        Context& m_Context;
         std::istream& m_Stream;
         SourceLocation m_Location;
         int m_CC = -1;

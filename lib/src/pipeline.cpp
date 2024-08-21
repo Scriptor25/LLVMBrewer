@@ -1,5 +1,6 @@
 #include <Brewer/AST.hpp>
 #include <Brewer/Builder.hpp>
+#include <Brewer/Context.hpp>
 #include <Brewer/Parser.hpp>
 #include <Brewer/Pipeline.hpp>
 
@@ -64,8 +65,10 @@ void Brewer::Pipeline::BuildAndEmit(const std::string& output_filename)
 
 void Brewer::Pipeline::ParseAndBuild()
 {
-    Parser parser(m_Stream, m_InputFilename);
-    Builder builder(m_ModuleID, m_InputFilename);
+    Context context;
+
+    Parser parser(context, m_Stream, m_InputFilename);
+    Builder builder(context, m_ModuleID, m_InputFilename);
 
     for (const auto& [beg, fn] : m_StmtFns)
         parser.ParseStmtFn(beg) = fn;
@@ -83,7 +86,7 @@ void Brewer::Pipeline::ParseAndBuild()
         if (!stmt_ptr) continue;
 
         if (m_DumpAST) stmt_ptr->Dump(std::cerr) << std::endl;
-        stmt_ptr->GenIR(builder);
+        stmt_ptr->GenIRNoVal(builder);
     }
 
     if (m_DumpIR) builder.Dump();

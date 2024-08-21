@@ -2,8 +2,8 @@
 #include <Brewer/Builder.hpp>
 #include <Brewer/Util.hpp>
 
-Brewer::SymbolExpression::SymbolExpression(const SourceLocation& loc, std::string name)
-    : Expression(loc), Name(std::move(name))
+Brewer::SymbolExpression::SymbolExpression(const SourceLocation& loc, const TypePtr& type, std::string name)
+    : Expression(loc, type), Name(std::move(name))
 {
 }
 

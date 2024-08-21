@@ -5,9 +5,11 @@
 #include <Brewer/Value.hpp>
 
 Brewer::CallExpression::CallExpression(const SourceLocation& loc,
+                                       const TypePtr& type,
                                        ExprPtr callee,
                                        std::vector<ExprPtr>& args)
-    : Expression(loc), Callee(std::move(callee))
+    : Expression(loc, type),
+      Callee(std::move(callee))
 {
     Args.reserve(args.size());
     for (auto& arg : args)

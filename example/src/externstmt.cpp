@@ -13,9 +13,7 @@ std::ostream& Test::ExternStatement::Dump(std::ostream& stream) const
     return stream << "extern " << Proto;
 }
 
-Brewer::ValuePtr Test::ExternStatement::GenIR(Brewer::Builder& builder) const
+void Test::ExternStatement::GenIRNoVal(Brewer::Builder& builder) const
 {
-    const auto fn = Proto.GenIR(builder);
-    if (!fn) return {};
-    return Brewer::RValue::Direct(builder, Brewer::PointerType::Get(Proto.GetType()), fn);
+    Proto.GenIR(builder);
 }

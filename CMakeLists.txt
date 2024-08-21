@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(LLVMBrewer)
 
-option(BREWER_BUILD_EXAMPLE "Enable the example target" ON)
+option(BREWER_BUILD_EXAMPLE "Enable the example target" OFF)
 option(BREWER_INSTALL "Enable the install targets" OFF)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -11,7 +11,6 @@ find_package(LLVM REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-message(STATUS "Libs: ${LLVM_AVAILABLE_LIBS}")
 
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 

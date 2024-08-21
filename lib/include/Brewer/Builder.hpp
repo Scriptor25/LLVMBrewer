@@ -50,8 +50,6 @@ namespace Brewer
         BinaryFn& GenBinaryFn(const std::string& operator_);
         UnaryFn& GenUnaryFn(const std::string& operator_);
 
-        void Close() const;
-
         void Dump() const;
         void EmitToFile(const std::string& filename) const;
 
@@ -65,7 +63,6 @@ namespace Brewer
         std::unique_ptr<llvm::LLVMContext> m_Context;
         std::unique_ptr<llvm::IRBuilder<>> m_IRBuilder;
         std::unique_ptr<llvm::Module> m_Module;
-        llvm::Function* m_Global;
 
         std::map<std::string, BinaryFn> m_BinaryFns;
         std::map<std::string, UnaryFn> m_UnaryFns;

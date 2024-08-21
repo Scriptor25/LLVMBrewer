@@ -321,11 +321,6 @@ Brewer::Builder::Builder(const std::string& module_id, const std::string& filena
     m_Module = std::make_unique<llvm::Module>(module_id, *m_Context);
     m_Module->setSourceFileName(filename);
 
-    const auto ft = llvm::FunctionType::get(m_IRBuilder->getInt32Ty(), {}, false);
-    m_Global = llvm::Function::Create(ft, llvm::GlobalValue::ExternalLinkage, "main", *m_Module);
-    const auto bb = llvm::BasicBlock::Create(*m_Context, "entry", m_Global);
-    m_IRBuilder->SetInsertPoint(bb);
-
     m_BinaryFns["=="] = GenEQ;
     m_BinaryFns["!="] = GenNE;
     m_BinaryFns["<"] = GenLT;
@@ -377,15 +372,9 @@ Brewer::UnaryFn& Brewer::Builder::GenUnaryFn(const std::string& operator_)
     return m_UnaryFns[operator_];
 }
 
-void Brewer::Builder::Close() const
-{
-    const auto val = m_IRBuilder->getInt32(0);
-    m_IRBuilder->CreateRet(val);
-}
-
 void Brewer::Builder::Dump() const
 {
-    m_Module->print(llvm::errs(), nullptr);
+    m_Module->print(llvm::outs(), nullptr);
 }
 
 void Brewer::Builder::EmitToFile(const std::string& filename) const

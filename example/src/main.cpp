@@ -52,7 +52,7 @@ int main(const int argc, const char** argv)
 {
     if (argc < 3)
     {
-        std::cerr << "Usage: test <in> <out>" << std::endl;
+        std::cerr << "USAGE: test <in> <out>" << std::endl;
         return 1;
     }
 
@@ -66,7 +66,7 @@ int main(const int argc, const char** argv)
     std::ifstream stream(argv[1]);
     if (!stream)
     {
-        std::cerr << "Failed to open file '" << argv[1] << "'" << std::endl;
+        std::cerr << "failed to open '" << argv[1] << "'" << std::endl;
         return 1;
     }
 
@@ -74,7 +74,7 @@ int main(const int argc, const char** argv)
         .ParseStmtFn("def", parse_def)
         .ParseStmtFn("extern", parse_extern)
         .ParseExprFn("if", parse_if)
-        //.DumpAST()
+        .DumpAST()
         .ModuleID(module_id)
         .DumpIR()
         .BuildAndEmit(output_filename);

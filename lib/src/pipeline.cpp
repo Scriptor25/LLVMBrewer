@@ -86,8 +86,6 @@ void Brewer::Pipeline::ParseAndBuild()
         stmt_ptr->GenIR(builder);
     }
 
-    builder.Close();
-
     if (m_DumpIR) builder.Dump();
     if (m_EmitToFile) builder.EmitToFile(m_OutputFilename);
 }

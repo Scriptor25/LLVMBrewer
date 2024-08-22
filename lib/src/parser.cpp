@@ -705,7 +705,7 @@ Brewer::ExprPtr Brewer::Parser::ParseMember(ExprPtr object)
         if (dereference)
         {
             auto ptr_type = std::dynamic_pointer_cast<PointerType>(object->Type);
-            type = std::dynamic_pointer_cast<StructType>(ptr_type)->GetElement(member, index);
+            type = std::dynamic_pointer_cast<StructType>(ptr_type->GetBase())->GetElement(member, index);
         }
         else
         {

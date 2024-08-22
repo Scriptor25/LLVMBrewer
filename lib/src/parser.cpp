@@ -215,6 +215,18 @@ static int is_operator(const int c)
         || c == '~';
 }
 
+static int is_compound_operator(const int c)
+{
+    return c == '+'
+        || c == '-'
+        || c == '&'
+        || c == '|'
+        || c == '^'
+        || c == '='
+        || c == '<'
+        || c == '>';
+}
+
 int Brewer::Parser::Get()
 {
     ++m_Location.Column;
@@ -492,7 +504,7 @@ Brewer::Token Brewer::Parser::NextToken()
             return {loc, TokenType_Name, value};
 
         case State_Operator:
-            if (is_operator(m_CC))
+            if (is_compound_operator(m_CC))
             {
                 value += static_cast<char>(m_CC);
                 break;

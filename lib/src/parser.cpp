@@ -584,10 +584,17 @@ Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const int min_precedenc
         }
 
         TypePtr type;
-        m_Builder.GenBinaryFn(Value)(m_Builder,
-                                     RValue::Empty(m_Builder, lhs->Type),
-                                     RValue::Empty(m_Builder, rhs->Type),
-                                     &type);
+        if (Value == "=")
+        {
+            type = lhs->Type;
+        }
+        else
+        {
+            m_Builder.GenBinaryFn(Value)(m_Builder,
+                                         RValue::Empty(m_Builder, lhs->Type),
+                                         RValue::Empty(m_Builder, rhs->Type),
+                                         &type);
+        }
 
         lhs = std::make_unique<BinaryExpression>(Location, type, Value, std::move(lhs), std::move(rhs));
     }

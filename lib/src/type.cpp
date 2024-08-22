@@ -3,6 +3,7 @@
 #include <Brewer/Context.hpp>
 #include <Brewer/Type.hpp>
 #include <Brewer/Util.hpp>
+#include <utility>
 
 Brewer::TypePtr& Brewer::Type::Get(Context& context, const std::string& name)
 {
@@ -237,6 +238,10 @@ size_t Brewer::ArrayType::Length() const
     return m_Length;
 }
 
+Brewer::StructElement::StructElement(TypePtr type, std::string name)
+    : Type(std::move(type)), Name(std::move(name))
+{
+}
 
 Brewer::StructTypePtr Brewer::StructType::Get(const std::vector<StructElement>& elements)
 {

@@ -95,7 +95,7 @@ namespace Brewer
 
     struct StructElement
     {
-        StructElement(const TypePtr&, const std::string&);
+        StructElement(TypePtr, std::string);
 
         TypePtr Type;
         std::string Name;

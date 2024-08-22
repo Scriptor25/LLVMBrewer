@@ -52,7 +52,7 @@ Brewer::ValuePtr Brewer::UnaryExpression::GenIR(Builder& builder) const
 
     return std::cerr << "at " << Location << ": "
         << "undefined unary operator "
-        << "'" << Operator << operand->GetType() << "'"
+        << "'" << Operator << operand->GetType()->GetName() << "'"
         << std::endl
         << ErrMark<ValuePtr>();
 }

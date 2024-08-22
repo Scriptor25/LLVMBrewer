@@ -33,6 +33,7 @@ namespace Brewer
 
         [[nodiscard]] Context& GetContext() const;
         [[nodiscard]] const std::string& GetName() const;
+        [[nodiscard]] TypeID GetID() const;
         [[nodiscard]] size_t GetSize() const;
 
         [[nodiscard]] bool IsVoid() const;

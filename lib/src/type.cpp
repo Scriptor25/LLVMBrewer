@@ -99,6 +99,11 @@ const std::string& Brewer::Type::GetName() const
     return m_Name;
 }
 
+Brewer::TypeID Brewer::Type::GetID() const
+{
+    return m_ID;
+}
+
 size_t Brewer::Type::GetSize() const
 {
     return m_Size;

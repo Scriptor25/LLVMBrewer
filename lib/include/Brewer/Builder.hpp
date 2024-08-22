@@ -32,7 +32,7 @@ namespace Brewer
         static ValuePtr GenOr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
         static ValuePtr GenXor(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
         static ValuePtr GenShl(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenShr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenLShr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
         static ValuePtr GenAShr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
 
         static ValuePtr GenInc(Builder&, const ValuePtr& val);
@@ -58,7 +58,7 @@ namespace Brewer
         void Pop();
         ValuePtr& operator[](const std::string& name);
 
-        ValuePtr GenCast(const ValuePtr& value, const TypePtr& type);
+        ValuePtr GenCast(const ValuePtr& src, const TypePtr& dst);
 
     private:
         Context& m_Context;

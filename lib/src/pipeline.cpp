@@ -82,11 +82,11 @@ void Brewer::Pipeline::ParseAndBuild()
 
     while (!parser.AtEOF())
     {
-        const auto stmt_ptr = parser.Parse();
-        if (!stmt_ptr) continue;
+        const auto ptr = parser.Parse();
+        if (!ptr) continue;
 
-        if (m_DumpAST) stmt_ptr->Dump(std::cerr) << std::endl;
-        stmt_ptr->GenIRNoVal(builder);
+        if (m_DumpAST) std::cerr << ptr->Location << ": " << std::endl << ptr << std::endl;
+        ptr->GenIRNoVal(builder);
     }
 
     if (m_DumpIR) builder.Dump();

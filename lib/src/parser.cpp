@@ -315,13 +315,6 @@ Brewer::Token Brewer::Parser::NextToken()
     if (m_CC < 0)
         m_CC = Get();
 
-    while (0x00 <= m_CC && m_CC <= 0x20)
-    {
-        if (m_CC == '\n')
-            NewLine();
-        m_CC = Get();
-    }
-
     auto state = State_Normal;
     bool isfloat;
     std::string value;

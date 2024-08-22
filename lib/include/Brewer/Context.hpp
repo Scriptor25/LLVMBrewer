@@ -14,6 +14,8 @@ namespace Brewer
         TypePtr& GetType(const std::string& name);
         TypePtr& GetSymbol(const std::string& name);
 
+        TypePtr& CurrentResult();
+
         void Push();
         void Pop();
 
@@ -22,5 +24,7 @@ namespace Brewer
 
         std::vector<std::map<std::string, TypePtr>> m_SymbolStack;
         std::map<std::string, TypePtr> m_Symbols;
+
+        TypePtr m_CurrentResult;
     };
 }

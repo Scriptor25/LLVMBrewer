@@ -24,6 +24,11 @@ Brewer::TypePtr& Brewer::Context::GetSymbol(const std::string& name)
     return m_Symbols[name];
 }
 
+Brewer::TypePtr& Brewer::Context::CurrentResult()
+{
+    return m_CurrentResult;
+}
+
 void Brewer::Context::Push()
 {
     m_SymbolStack.push_back(m_Symbols);

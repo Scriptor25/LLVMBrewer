@@ -41,6 +41,9 @@ namespace Brewer
     class LValue : public Value
     {
     public:
+        static LValuePtr Alloca(Builder&, const TypePtr& type);
+        static LValuePtr Direct(Builder&, const TypePtr& type, llvm::Value* ptr);
+
         LValue(Builder&, const TypePtr& type, llvm::Value* ptr);
 
         [[nodiscard]] llvm::Value* Get() const override;

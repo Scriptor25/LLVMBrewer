@@ -47,6 +47,7 @@ namespace Brewer
         LValue(Builder&, const TypePtr& type, llvm::Value* ptr);
 
         [[nodiscard]] llvm::Value* Get() const override;
+        [[nodiscard]] llvm::Value* GetPtr() const;
 
         void Set(llvm::Value* value) const;
 

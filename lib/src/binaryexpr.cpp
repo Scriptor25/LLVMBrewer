@@ -50,6 +50,7 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
     if (l->GetType() != r->GetType())
     {
         const auto type = Type::GetHigherOrder(l->GetType(), r->GetType());
+        if (!type) return {};
         l = builder.GenCast(l, type);
         if (!l) return {};
         r = builder.GenCast(r, type);

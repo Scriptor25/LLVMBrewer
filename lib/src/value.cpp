@@ -65,6 +65,11 @@ llvm::Value* Brewer::LValue::Get() const
     return GetBuilder().IRBuilder().CreateLoad(GetIRType(), m_Ptr);
 }
 
+llvm::Value* Brewer::LValue::GetPtr() const
+{
+    return m_Ptr;
+}
+
 void Brewer::LValue::Set(llvm::Value* value) const
 {
     GetBuilder().IRBuilder().CreateStore(value, m_Ptr);

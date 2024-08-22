@@ -59,7 +59,7 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
 
     if (const auto& fn = builder.GenBinaryFn(Operator))
     {
-        if (auto result = fn(builder, l, r))
+        if (auto result = fn(builder, l, r, {}))
             return result;
 
         return std::cerr
@@ -75,7 +75,7 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
         const auto op = Operator.substr(0, pos);
         if (const auto& fn = builder.GenBinaryFn(op))
         {
-            if (const auto result = fn(builder, l, r))
+            if (const auto result = fn(builder, l, r, {}))
             {
                 if (auto dest = std::dynamic_pointer_cast<LValue>(lhs))
                 {

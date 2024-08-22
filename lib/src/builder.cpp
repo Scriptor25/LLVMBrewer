@@ -11,8 +11,17 @@
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/TargetParser/Host.h>
 
-Brewer::ValuePtr Brewer::Builder::GenEQ(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenEQ(Builder& builder,
+                                        const ValuePtr& lhs,
+                                        const ValuePtr& rhs,
+                                        TypePtr* result_type)
 {
+    if (result_type)
+    {
+        *result_type = Type::Get(builder.GetContext(), "i1");
+        return {};
+    }
+
     llvm::Value* result;
     switch (lhs->GetType()->GetID())
     {
@@ -29,8 +38,17 @@ Brewer::ValuePtr Brewer::Builder::GenEQ(Builder& builder, const ValuePtr& lhs, c
     return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenNE(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenNE(Builder& builder,
+                                        const ValuePtr& lhs,
+                                        const ValuePtr& rhs,
+                                        TypePtr* result_type)
 {
+    if (result_type)
+    {
+        *result_type = Type::Get(builder.GetContext(), "i1");
+        return {};
+    }
+
     llvm::Value* result;
     switch (lhs->GetType()->GetID())
     {
@@ -47,8 +65,17 @@ Brewer::ValuePtr Brewer::Builder::GenNE(Builder& builder, const ValuePtr& lhs, c
     return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenLT(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenLT(Builder& builder,
+                                        const ValuePtr& lhs,
+                                        const ValuePtr& rhs,
+                                        TypePtr* result_type)
 {
+    if (result_type)
+    {
+        *result_type = Type::Get(builder.GetContext(), "i1");
+        return {};
+    }
+
     llvm::Value* result;
     switch (lhs->GetType()->GetID())
     {
@@ -65,8 +92,17 @@ Brewer::ValuePtr Brewer::Builder::GenLT(Builder& builder, const ValuePtr& lhs, c
     return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenGT(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenGT(Builder& builder,
+                                        const ValuePtr& lhs,
+                                        const ValuePtr& rhs,
+                                        TypePtr* result_type)
 {
+    if (result_type)
+    {
+        *result_type = Type::Get(builder.GetContext(), "i1");
+        return {};
+    }
+
     llvm::Value* result;
     switch (lhs->GetType()->GetID())
     {
@@ -83,8 +119,17 @@ Brewer::ValuePtr Brewer::Builder::GenGT(Builder& builder, const ValuePtr& lhs, c
     return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenLE(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenLE(Builder& builder,
+                                        const ValuePtr& lhs,
+                                        const ValuePtr& rhs,
+                                        TypePtr* result_type)
 {
+    if (result_type)
+    {
+        *result_type = Type::Get(builder.GetContext(), "i1");
+        return {};
+    }
+
     llvm::Value* result;
     switch (lhs->GetType()->GetID())
     {
@@ -101,8 +146,17 @@ Brewer::ValuePtr Brewer::Builder::GenLE(Builder& builder, const ValuePtr& lhs, c
     return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenGE(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenGE(Builder& builder,
+                                        const ValuePtr& lhs,
+                                        const ValuePtr& rhs,
+                                        TypePtr* result_type)
 {
+    if (result_type)
+    {
+        *result_type = Type::Get(builder.GetContext(), "i1");
+        return {};
+    }
+
     llvm::Value* result;
     switch (lhs->GetType()->GetID())
     {
@@ -119,8 +173,17 @@ Brewer::ValuePtr Brewer::Builder::GenGE(Builder& builder, const ValuePtr& lhs, c
     return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenLAnd(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenLAnd(Builder& builder,
+                                          const ValuePtr& lhs,
+                                          const ValuePtr& rhs,
+                                          TypePtr* result_type)
 {
+    if (result_type)
+    {
+        *result_type = Type::Get(builder.GetContext(), "i1");
+        return {};
+    }
+
     const auto l = builder.IRBuilder().CreateIsNotNull(lhs->Get());
     const auto r = builder.IRBuilder().CreateIsNotNull(rhs->Get());
 
@@ -128,8 +191,17 @@ Brewer::ValuePtr Brewer::Builder::GenLAnd(Builder& builder, const ValuePtr& lhs,
     return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenLOr(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenLOr(Builder& builder,
+                                         const ValuePtr& lhs,
+                                         const ValuePtr& rhs,
+                                         TypePtr* result_type)
 {
+    if (result_type)
+    {
+        *result_type = Type::Get(builder.GetContext(), "i1");
+        return {};
+    }
+
     const auto l = builder.IRBuilder().CreateIsNotNull(lhs->Get());
     const auto r = builder.IRBuilder().CreateIsNotNull(rhs->Get());
 
@@ -137,8 +209,17 @@ Brewer::ValuePtr Brewer::Builder::GenLOr(Builder& builder, const ValuePtr& lhs, 
     return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenLXor(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenLXor(Builder& builder,
+                                          const ValuePtr& lhs,
+                                          const ValuePtr& rhs,
+                                          TypePtr* result_type)
 {
+    if (result_type)
+    {
+        *result_type = Type::Get(builder.GetContext(), "i1");
+        return {};
+    }
+
     const auto l = builder.IRBuilder().CreateIsNotNull(lhs->Get());
     const auto r = builder.IRBuilder().CreateIsNotNull(rhs->Get());
 
@@ -146,9 +227,18 @@ Brewer::ValuePtr Brewer::Builder::GenLXor(Builder& builder, const ValuePtr& lhs,
     return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenAdd(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenAdd(Builder& builder,
+                                         const ValuePtr& lhs,
+                                         const ValuePtr& rhs,
+                                         TypePtr* result_type)
 {
     const auto type = lhs->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -166,9 +256,18 @@ Brewer::ValuePtr Brewer::Builder::GenAdd(Builder& builder, const ValuePtr& lhs, 
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenSub(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenSub(Builder& builder,
+                                         const ValuePtr& lhs,
+                                         const ValuePtr& rhs,
+                                         TypePtr* result_type)
 {
     const auto type = lhs->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -186,9 +285,18 @@ Brewer::ValuePtr Brewer::Builder::GenSub(Builder& builder, const ValuePtr& lhs, 
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenMul(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenMul(Builder& builder,
+                                         const ValuePtr& lhs,
+                                         const ValuePtr& rhs,
+                                         TypePtr* result_type)
 {
     const auto type = lhs->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -206,9 +314,18 @@ Brewer::ValuePtr Brewer::Builder::GenMul(Builder& builder, const ValuePtr& lhs, 
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenDiv(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenDiv(Builder& builder,
+                                         const ValuePtr& lhs,
+                                         const ValuePtr& rhs,
+                                         TypePtr* result_type)
 {
     const auto type = lhs->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -226,9 +343,18 @@ Brewer::ValuePtr Brewer::Builder::GenDiv(Builder& builder, const ValuePtr& lhs, 
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenRem(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenRem(Builder& builder,
+                                         const ValuePtr& lhs,
+                                         const ValuePtr& rhs,
+                                         TypePtr* result_type)
 {
     const auto type = lhs->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -246,9 +372,18 @@ Brewer::ValuePtr Brewer::Builder::GenRem(Builder& builder, const ValuePtr& lhs, 
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenAnd(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenAnd(Builder& builder,
+                                         const ValuePtr& lhs,
+                                         const ValuePtr& rhs,
+                                         TypePtr* result_type)
 {
     const auto type = lhs->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -263,9 +398,18 @@ Brewer::ValuePtr Brewer::Builder::GenAnd(Builder& builder, const ValuePtr& lhs, 
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenOr(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenOr(Builder& builder,
+                                        const ValuePtr& lhs,
+                                        const ValuePtr& rhs,
+                                        TypePtr* result_type)
 {
     const auto type = lhs->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -280,9 +424,18 @@ Brewer::ValuePtr Brewer::Builder::GenOr(Builder& builder, const ValuePtr& lhs, c
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenXor(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenXor(Builder& builder,
+                                         const ValuePtr& lhs,
+                                         const ValuePtr& rhs,
+                                         TypePtr* result_type)
 {
     const auto type = lhs->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -297,9 +450,18 @@ Brewer::ValuePtr Brewer::Builder::GenXor(Builder& builder, const ValuePtr& lhs, 
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenShl(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenShl(Builder& builder,
+                                         const ValuePtr& lhs,
+                                         const ValuePtr& rhs,
+                                         TypePtr* result_type)
 {
     const auto type = lhs->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -314,9 +476,18 @@ Brewer::ValuePtr Brewer::Builder::GenShl(Builder& builder, const ValuePtr& lhs, 
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenLShr(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenLShr(Builder& builder,
+                                          const ValuePtr& lhs,
+                                          const ValuePtr& rhs,
+                                          TypePtr* result_type)
 {
     const auto type = lhs->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -331,9 +502,18 @@ Brewer::ValuePtr Brewer::Builder::GenLShr(Builder& builder, const ValuePtr& lhs,
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenAShr(Builder& builder, const ValuePtr& lhs, const ValuePtr& rhs)
+Brewer::ValuePtr Brewer::Builder::GenAShr(Builder& builder,
+                                          const ValuePtr& lhs,
+                                          const ValuePtr& rhs,
+                                          TypePtr* result_type)
 {
     const auto type = lhs->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -348,9 +528,15 @@ Brewer::ValuePtr Brewer::Builder::GenAShr(Builder& builder, const ValuePtr& lhs,
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenInc(Builder& builder, const ValuePtr& val)
+Brewer::ValuePtr Brewer::Builder::GenInc(Builder& builder, const ValuePtr& val, TypePtr* result_type)
 {
     const auto type = val->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* one;
     switch (type->GetID())
@@ -365,12 +551,18 @@ Brewer::ValuePtr Brewer::Builder::GenInc(Builder& builder, const ValuePtr& val)
         return {};
     }
 
-    return builder.GenBinaryFn("+")(builder, val, RValue::Direct(builder, type, one));
+    return builder.GenBinaryFn("+")(builder, val, RValue::Direct(builder, type, one), result_type);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenDec(Builder& builder, const ValuePtr& val)
+Brewer::ValuePtr Brewer::Builder::GenDec(Builder& builder, const ValuePtr& val, TypePtr* result_type)
 {
     const auto type = val->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* one;
     switch (type->GetID())
@@ -385,12 +577,18 @@ Brewer::ValuePtr Brewer::Builder::GenDec(Builder& builder, const ValuePtr& val)
         return {};
     }
 
-    return builder.GenBinaryFn("-")(builder, val, RValue::Direct(builder, type, one));
+    return builder.GenBinaryFn("-")(builder, val, RValue::Direct(builder, type, one), result_type);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenNeg(Builder& builder, const ValuePtr& val)
+Brewer::ValuePtr Brewer::Builder::GenNeg(Builder& builder, const ValuePtr& val, TypePtr* result_type)
 {
     const auto type = val->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())
@@ -408,15 +606,27 @@ Brewer::ValuePtr Brewer::Builder::GenNeg(Builder& builder, const ValuePtr& val)
     return RValue::Direct(builder, type, result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenLNot(Builder& builder, const ValuePtr& val)
+Brewer::ValuePtr Brewer::Builder::GenLNot(Builder& builder, const ValuePtr& val, TypePtr* result_type)
 {
+    if (result_type)
+    {
+        *result_type = Type::Get(builder.GetContext(), "i1");
+        return {};
+    }
+
     const auto result = builder.IRBuilder().CreateIsNull(val->Get());
     return RValue::Direct(builder, Type::Get(builder.GetContext(), "i1"), result);
 }
 
-Brewer::ValuePtr Brewer::Builder::GenNot(Builder& builder, const ValuePtr& val)
+Brewer::ValuePtr Brewer::Builder::GenNot(Builder& builder, const ValuePtr& val, TypePtr* result_type)
 {
     const auto type = val->GetType();
+
+    if (result_type)
+    {
+        *result_type = type;
+        return {};
+    }
 
     llvm::Value* result;
     switch (type->GetID())

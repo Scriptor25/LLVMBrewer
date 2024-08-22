@@ -14,32 +14,32 @@ namespace Brewer
     class Builder
     {
     public:
-        static ValuePtr GenEQ(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenNE(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenLT(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenGT(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenLE(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenGE(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenLAnd(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenLOr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenLXor(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenAdd(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenSub(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenMul(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenDiv(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenRem(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenAnd(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenOr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenXor(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenShl(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenLShr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
-        static ValuePtr GenAShr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs);
+        static ValuePtr GenEQ(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenNE(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenLT(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenGT(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenLE(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenGE(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenLAnd(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenLOr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenLXor(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenAdd(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenSub(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenMul(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenDiv(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenRem(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenAnd(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenOr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenXor(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenShl(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenLShr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
+        static ValuePtr GenAShr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
 
-        static ValuePtr GenInc(Builder&, const ValuePtr& val);
-        static ValuePtr GenDec(Builder&, const ValuePtr& val);
-        static ValuePtr GenNeg(Builder&, const ValuePtr& val);
-        static ValuePtr GenLNot(Builder&, const ValuePtr& val);
-        static ValuePtr GenNot(Builder&, const ValuePtr& val);
+        static ValuePtr GenInc(Builder&, const ValuePtr&, TypePtr*);
+        static ValuePtr GenDec(Builder&, const ValuePtr&, TypePtr*);
+        static ValuePtr GenNeg(Builder&, const ValuePtr&, TypePtr*);
+        static ValuePtr GenLNot(Builder&, const ValuePtr&, TypePtr*);
+        static ValuePtr GenNot(Builder&, const ValuePtr&, TypePtr*);
 
         Builder(Context&, const std::string& module_id, const std::string& filename);
 

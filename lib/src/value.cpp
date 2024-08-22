@@ -37,6 +37,11 @@ Brewer::LValuePtr Brewer::Value::Dereference() const
         << ErrMark<LValuePtr>();
 }
 
+Brewer::RValuePtr Brewer::RValue::Empty(Builder& builder, const TypePtr& type)
+{
+    return std::make_shared<RValue>(builder, type, nullptr);
+}
+
 Brewer::RValuePtr Brewer::RValue::Direct(Builder& builder, const TypePtr& type, llvm::Value* value)
 {
     return std::make_shared<RValue>(builder, type, value);

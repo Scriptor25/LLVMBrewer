@@ -44,6 +44,6 @@ namespace Brewer
 
     typedef std::function<StmtPtr(Parser&)> StmtFn;
     typedef std::function<ExprPtr(Parser&)> ExprFn;
-    typedef std::function<ValuePtr(Builder&, const ValuePtr&, const ValuePtr&)> BinaryFn;
-    typedef std::function<ValuePtr(Builder&, const ValuePtr&)> UnaryFn;
+    typedef std::function<ValuePtr(Builder&, const ValuePtr&, const ValuePtr&, TypePtr*)> BinaryFn;
+    typedef std::function<ValuePtr(Builder&, const ValuePtr&, TypePtr*)> UnaryFn;
 }

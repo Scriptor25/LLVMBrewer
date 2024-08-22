@@ -13,7 +13,7 @@ namespace Brewer
     class Parser
     {
     public:
-        Parser(Context&, std::istream& stream, const std::string& filename);
+        Parser(Builder&, std::istream& stream, const std::string& filename);
 
         [[nodiscard]] Context& GetContext() const;
 
@@ -57,6 +57,8 @@ namespace Brewer
         ExprPtr ParsePrimary();
 
         Context& m_Context;
+        Builder& m_Builder;
+
         std::istream& m_Stream;
         SourceLocation m_Location;
         int m_CC = -1;

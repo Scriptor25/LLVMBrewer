@@ -67,8 +67,8 @@ void Brewer::Pipeline::ParseAndBuild()
 {
     Context context;
 
-    Parser parser(context, m_Stream, m_InputFilename);
     Builder builder(context, m_ModuleID, m_InputFilename);
+    Parser parser(builder, m_Stream, m_InputFilename);
 
     for (const auto& [beg, fn] : m_StmtFns)
         parser.ParseStmtFn(beg) = fn;

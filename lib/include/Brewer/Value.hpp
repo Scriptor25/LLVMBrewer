@@ -28,6 +28,7 @@ namespace Brewer
     class RValue : public Value
     {
     public:
+        static RValuePtr Empty(Builder&, const TypePtr& type);
         static RValuePtr Direct(Builder&, const TypePtr& type, llvm::Value* value);
 
         RValue(Builder&, const TypePtr& type, llvm::Value* value);

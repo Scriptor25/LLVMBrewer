@@ -28,7 +28,7 @@ Brewer::ValuePtr Brewer::UnaryExpression::GenIR(Builder& builder) const
     if (const auto& fn = builder.GenUnaryFn(Operator))
     {
         const bool assign = Operator == "++" || Operator == "--";
-        if (auto result = fn(builder, operand))
+        if (auto result = fn(builder, operand, nullptr))
         {
             if (assign)
             {

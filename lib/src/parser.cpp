@@ -1,11 +1,14 @@
 #include <Brewer/AST.hpp>
+#include <Brewer/Builder.hpp>
 #include <Brewer/Context.hpp>
 #include <Brewer/Parser.hpp>
 #include <Brewer/Type.hpp>
 #include <Brewer/Util.hpp>
 
-Brewer::Parser::Parser(Context& context, std::istream& stream, const std::string& filename)
-    : m_Context(context), m_Stream(stream), m_Location{filename, 1, 0}
+#include "Brewer/Value.hpp"
+
+Brewer::Parser::Parser(Builder& builder, std::istream& stream, const std::string& filename)
+    : m_Context(builder.GetContext()), m_Builder(builder), m_Stream(stream), m_Location{filename, 1, 0}
 {
     Next();
 }
@@ -440,12 +443,12 @@ Brewer::Token Brewer::Parser::NextToken()
             {
                 state = State_Hex;
                 break;
+                value += "0.";
             }
             if (m_CC == '.')
             {
                 state = State_Dec;
                 isfloat = true;
-                value += "0.";
                 break;
             }
             if (is_oct_digit(m_CC))
@@ -581,20 +584,10 @@ Brewer::ExprPtr Brewer::Parser::ParseBinary(ExprPtr lhs, const int min_precedenc
         }
 
         TypePtr type;
-        if (Value == "=="
-            || Value == "!="
-            || Value == "<="
-            || Value == ">="
-            || Value == "<"
-            || Value == ">"
-            || Value == "&&"
-            || Value == "||"
-            || Value == "^^")
-            type = m_Context.GetType("i1");
-        else if (Value.find('=') != std::string::npos)
-            type = lhs->Type;
-        else
-            type = Type::GetHigherOrder(lhs->Type, rhs->Type);
+        m_Builder.GenBinaryFn(Value)(m_Builder,
+                                     RValue::Empty(m_Builder, lhs->Type),
+                                     RValue::Empty(m_Builder, rhs->Type),
+                                     &type);
 
         lhs = std::make_unique<BinaryExpression>(Location, type, Value, std::move(lhs), std::move(rhs));
     }
@@ -650,7 +643,9 @@ Brewer::ExprPtr Brewer::Parser::ParseUnary(ExprPtr operand)
     if (At("++") || At("--"))
     {
         auto [Location, Type, Value] = Skip();
-        operand = std::make_unique<UnaryExpression>(Location, operand->Type, Value, std::move(operand), false);
+        TypePtr type;
+        m_Builder.GenUnaryFn(Value)(m_Builder, RValue::Empty(m_Builder, operand->Type), &type);
+        operand = std::make_unique<UnaryExpression>(Location, type, Value, std::move(operand), false);
     }
 
     return operand;
@@ -747,8 +742,7 @@ Brewer::ExprPtr Brewer::Parser::ParsePrimary()
         auto [Location, Type, Value] = Skip();
         auto operand = ParseCall();
         TypePtr type;
-        if (Value == "!") type = m_Context.GetType("i1");
-        else type = operand->Type;
+        m_Builder.GenUnaryFn(Value)(m_Builder, RValue::Empty(m_Builder, operand->Type), &type);
         return std::make_unique<UnaryExpression>(Location, type, Value, std::move(operand), true);
     }
 

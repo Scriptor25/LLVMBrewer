@@ -9,27 +9,20 @@ namespace Brewer
     class Pipeline
     {
     public:
-        Pipeline(std::istream& stream, std::string input_filename);
+        Pipeline();
 
-        // Intermediate Operations
         Pipeline& ParseStmtFn(const std::string& beg, const StmtFn& fn);
         Pipeline& ParseExprFn(const std::string& beg, const ExprFn& fn);
         Pipeline& GenBinaryFn(const std::string& operator_, const BinaryFn& fn);
         Pipeline& GenUnaryFn(const std::string& operator_, const UnaryFn& fn);
         Pipeline& ModuleID(const std::string& module_id);
-        Pipeline& DumpAST();
-        Pipeline& DumpIR();
+        Pipeline& DumpAST(bool);
+        Pipeline& DumpIR(bool);
 
-        // Terminal Operations
-        void Build();
-        void BuildAndEmit(const std::string& output_filename);
+        void Build(std::istream& stream, const std::string& input_filename);
+        void BuildAndEmit(std::istream& stream, const std::string& input_filename, const std::string& output_filename);
 
     private:
-        void ParseAndBuild();
-
-        std::istream& m_Stream;
-
-        std::string m_InputFilename;
         std::string m_OutputFilename;
         std::string m_ModuleID;
 

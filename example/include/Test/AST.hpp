@@ -22,11 +22,11 @@ namespace Test
 
     std::ostream& operator<<(std::ostream& stream, const Prototype& proto);
 
-    struct FunctionStatement : Brewer::Statement
+    struct DefStatement : Brewer::Statement
     {
-        FunctionStatement(const Brewer::SourceLocation& loc,
-                          Prototype proto,
-                          Brewer::ExprPtr body);
+        DefStatement(const Brewer::SourceLocation& loc,
+                     Prototype proto,
+                     Brewer::ExprPtr body);
 
         std::ostream& Dump(std::ostream& stream) const override;
         void GenIRNoVal(Brewer::Builder& builder) const override;

@@ -35,13 +35,13 @@ namespace Brewer
         Token Expect(const std::string&);
 
         StmtPtr Parse();
-        TypePtr ParseType();
         ExprPtr ParseExpr();
+        TypePtr ParseType();
 
     private:
         int Get();
-        void Escape();
         void NewLine();
+        void Escape();
         Token NextToken();
 
         ExprPtr ParseBinary();

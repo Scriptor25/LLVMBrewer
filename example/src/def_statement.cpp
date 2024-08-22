@@ -6,19 +6,19 @@
 #include <llvm/IR/Verifier.h>
 #include <Test/AST.hpp>
 
-Test::FunctionStatement::FunctionStatement(const Brewer::SourceLocation& loc,
-                                           Prototype proto,
-                                           Brewer::ExprPtr body)
+Test::DefStatement::DefStatement(const Brewer::SourceLocation& loc,
+                                 Prototype proto,
+                                 Brewer::ExprPtr body)
     : Statement(loc), Proto(std::move(proto)), Body(std::move(body))
 {
 }
 
-std::ostream& Test::FunctionStatement::Dump(std::ostream& stream) const
+std::ostream& Test::DefStatement::Dump(std::ostream& stream) const
 {
     return stream << "def " << Proto << ' ' << Body;
 }
 
-void Test::FunctionStatement::GenIRNoVal(Brewer::Builder& builder) const
+void Test::DefStatement::GenIRNoVal(Brewer::Builder& builder) const
 {
     const auto fn = Proto.GenIR(builder);
     if (!fn || !fn->empty()) return;

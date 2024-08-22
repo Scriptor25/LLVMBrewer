@@ -4,8 +4,7 @@
 #include <Brewer/Parser.hpp>
 #include <Brewer/Pipeline.hpp>
 
-Brewer::Pipeline::Pipeline(std::istream& stream, std::string input_filename)
-    : m_Stream(stream), m_InputFilename(std::move(input_filename))
+Brewer::Pipeline::Pipeline()
 {
 }
 
@@ -33,9 +32,9 @@ Brewer::Pipeline& Brewer::Pipeline::GenUnaryFn(const std::string& operator_, con
     return *this;
 }
 
-Brewer::Pipeline& Brewer::Pipeline::DumpAST()
+Brewer::Pipeline& Brewer::Pipeline::DumpAST(const bool mode)
 {
-    m_DumpAST = true;
+    m_DumpAST = mode;
     return *this;
 }
 
@@ -45,30 +44,18 @@ Brewer::Pipeline& Brewer::Pipeline::ModuleID(const std::string& module_id)
     return *this;
 }
 
-Brewer::Pipeline& Brewer::Pipeline::DumpIR()
+Brewer::Pipeline& Brewer::Pipeline::DumpIR(const bool mode)
 {
-    m_DumpIR = true;
+    m_DumpIR = mode;
     return *this;
 }
 
-void Brewer::Pipeline::Build()
-{
-    ParseAndBuild();
-}
-
-void Brewer::Pipeline::BuildAndEmit(const std::string& output_filename)
-{
-    m_EmitToFile = true;
-    m_OutputFilename = output_filename;
-    ParseAndBuild();
-}
-
-void Brewer::Pipeline::ParseAndBuild()
+void Brewer::Pipeline::Build(std::istream& stream, const std::string& input_filename)
 {
     Context context;
 
-    Builder builder(context, m_ModuleID, m_InputFilename);
-    Parser parser(builder, m_Stream, m_InputFilename);
+    Builder builder(context, m_ModuleID, input_filename);
+    Parser parser(builder, stream, input_filename);
 
     for (const auto& [beg, fn] : m_StmtFns)
         parser.ParseStmtFn(beg) = fn;
@@ -91,4 +78,13 @@ void Brewer::Pipeline::ParseAndBuild()
 
     if (m_DumpIR) builder.Dump();
     if (m_EmitToFile) builder.EmitToFile(m_OutputFilename);
+}
+
+void Brewer::Pipeline::BuildAndEmit(std::istream& stream,
+                                    const std::string& input_filename,
+                                    const std::string& output_filename)
+{
+    m_EmitToFile = true;
+    m_OutputFilename = output_filename;
+    Build(stream, input_filename);
 }

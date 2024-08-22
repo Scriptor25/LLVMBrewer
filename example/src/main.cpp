@@ -32,7 +32,7 @@ static Brewer::StmtPtr parse_def(Brewer::Parser& parser)
     auto body = parser.ParseExpr();
     parser.GetContext().Pop();
     if (!body) return {};
-    return std::make_unique<Test::FunctionStatement>(Location, proto, std::move(body));
+    return std::make_unique<Test::DefStatement>(Location, proto, std::move(body));
 }
 
 static Brewer::StmtPtr parse_extern(Brewer::Parser& parser)
@@ -87,14 +87,14 @@ int main(const int argc, const char** argv)
         return 1;
     }
 
-    Brewer::Pipeline(stream, input_filename)
+    Brewer::Pipeline()
         .ParseStmtFn("def", parse_def)
         .ParseStmtFn("extern", parse_extern)
         .ParseExprFn("if", parse_if)
-        .DumpAST()
+        .DumpAST(true)
+        .DumpIR(true)
         .ModuleID(module_id)
-        .DumpIR()
-        .BuildAndEmit(output_filename);
+        .BuildAndEmit(stream, input_filename, output_filename);
 
     return 0;
 }

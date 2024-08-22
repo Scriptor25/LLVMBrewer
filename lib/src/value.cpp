@@ -40,12 +40,12 @@ llvm::Value* Brewer::RValue::Get() const
     return m_Value;
 }
 
-Brewer::LValuePtr Brewer::LValue::Alloca(Builder& builder, const TypePtr& type)
+Brewer::LValuePtr Brewer::LValue::Alloca(Builder& builder, const TypePtr& type, const std::string& name)
 {
     const auto bkp = builder.IRBuilder().GetInsertBlock();
     builder.IRBuilder().SetInsertPointPastAllocas(bkp->getParent());
     const auto ty = type->GenIR(builder);
-    const auto ptr = builder.IRBuilder().CreateAlloca(ty);
+    const auto ptr = builder.IRBuilder().CreateAlloca(ty, nullptr, name);
     builder.IRBuilder().SetInsertPoint(bkp);
     return Direct(builder, type, ptr);
 }

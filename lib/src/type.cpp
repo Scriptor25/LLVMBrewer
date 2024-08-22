@@ -326,5 +326,6 @@ Brewer::TypePtr Brewer::FunctionType::Result()
 
 Brewer::TypePtr Brewer::FunctionType::Param(const size_t i)
 {
+    if (i >= m_Params.size() && m_VarArg) return {};
     return m_Params[i];
 }

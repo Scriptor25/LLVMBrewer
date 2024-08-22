@@ -346,13 +346,17 @@ Brewer::Token Brewer::Parser::NextToken()
                 state = State_Radix;
                 break;
 
+            case '\r':
+                m_Location.Column = 0;
+                break;
+
+            case '\n':
+                NewLine();
+                break;
+
             default:
                 if (m_CC <= 0x20)
-                {
-                    if (m_CC == '\n')
-                        NewLine();
                     break;
-                }
 
                 if (isdigit(m_CC))
                 {

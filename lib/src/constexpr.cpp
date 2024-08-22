@@ -1,7 +1,32 @@
+#include <iomanip>
 #include <Brewer/AST.hpp>
 #include <Brewer/Builder.hpp>
 #include <Brewer/Type.hpp>
 #include <Brewer/Value.hpp>
+
+static std::ostream& unescape(std::ostream& stream, const int c)
+{
+    if (c >= 0x20) return stream << static_cast<char>(c);
+
+    switch (c)
+    {
+    case 0x07: return stream << "\\a";
+    case 0x08: return stream << "\\b";
+    case 0x09: return stream << "\\t";
+    case 0x0A: return stream << "\\n";
+    case 0x0B: return stream << "\\v";
+    case 0x0C: return stream << "\\f";
+    case 0x0D: return stream << "\\r";
+    default: return stream << "\\x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << c << std::dec;
+    }
+}
+
+static std::ostream& unescape(std::ostream& stream, const std::string& s)
+{
+    for (const auto& c : s)
+        unescape(stream, c);
+    return stream;
+}
 
 Brewer::ConstCharExpression::ConstCharExpression(const SourceLocation& loc, const TypePtr& type, const char value)
     : Expression(loc, type), Value(value)
@@ -10,7 +35,7 @@ Brewer::ConstCharExpression::ConstCharExpression(const SourceLocation& loc, cons
 
 std::ostream& Brewer::ConstCharExpression::Dump(std::ostream& stream) const
 {
-    return stream << '\'' << Value << '\'';
+    return unescape(stream << '\'', Value) << '\'';
 }
 
 Brewer::ValuePtr Brewer::ConstCharExpression::GenIR(Builder& builder) const
@@ -58,7 +83,7 @@ Brewer::ConstStringExpression::ConstStringExpression(const SourceLocation& loc, 
 
 std::ostream& Brewer::ConstStringExpression::Dump(std::ostream& stream) const
 {
-    return stream << '"' << Value << '"';
+    return unescape(stream << '"', Value) << '"';
 }
 
 Brewer::ValuePtr Brewer::ConstStringExpression::GenIR(Builder& builder) const

@@ -252,8 +252,6 @@ Brewer::StructTypePtr Brewer::StructType::Get(const std::vector<StructElement>& 
     {
         if (i > 0) name += ", ";
         name += elements[i].Type->GetName();
-        name += " ";
-        name += elements[i].Name;
         size += elements[i].Type->GetSize();
     }
     name += " }";

@@ -93,18 +93,26 @@ namespace Brewer
         size_t m_Length;
     };
 
+    struct StructElement
+    {
+        StructElement(const TypePtr&, const std::string&);
+
+        TypePtr Type;
+        std::string Name;
+    };
+
     class StructType : public Type
     {
     public:
-        static StructTypePtr Get(const std::vector<TypePtr>& elements);
+        static StructTypePtr Get(const std::vector<StructElement>& elements);
         static StructTypePtr Get(Context&);
 
-        StructType(Context&, const std::string& name, size_t size, const std::vector<TypePtr>& elements);
+        StructType(Context&, const std::string& name, size_t size, const std::vector<StructElement>& elements);
 
         llvm::StructType* GenIR(Builder&) const override;
 
     private:
-        std::vector<TypePtr> m_Elements;
+        std::vector<StructElement> m_Elements;
     };
 
     class FunctionType : public Type

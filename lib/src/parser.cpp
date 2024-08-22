@@ -121,10 +121,12 @@ Brewer::TypePtr Brewer::Parser::ParseType()
         }
         else
         {
-            std::vector<TypePtr> elements;
+            std::vector<StructElement> elements;
             while (!NextIfAt("}"))
             {
-                elements.push_back(ParseType());
+                auto element_type = ParseType();
+                auto element_name = Expect(TokenType_Name).Value;
+                elements.emplace_back(element_type, element_name);
                 if (!At("}")) Expect(",");
             }
             type = StructType::Get(elements);

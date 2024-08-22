@@ -52,6 +52,8 @@ namespace Brewer
         ExprPtr ParseUnary(ExprPtr);
         ExprPtr ParseIndex();
         ExprPtr ParseIndex(ExprPtr);
+        ExprPtr ParseMember();
+        ExprPtr ParseMember(ExprPtr);
         ExprPtr ParsePrimary();
 
         Context& m_Context;

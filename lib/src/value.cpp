@@ -1,6 +1,8 @@
+#include <iostream>
 #include <memory>
 #include <Brewer/Builder.hpp>
 #include <Brewer/Type.hpp>
+#include <Brewer/Util.hpp>
 #include <Brewer/Value.hpp>
 
 Brewer::Value::Value(Builder& builder, TypePtr type)
@@ -23,6 +25,16 @@ Brewer::TypePtr Brewer::Value::GetType() const
 llvm::Type* Brewer::Value::GetIRType() const
 {
     return m_IRType;
+}
+
+Brewer::LValuePtr Brewer::Value::Dereference() const
+{
+    if (const auto type = std::dynamic_pointer_cast<PointerType>(m_Type))
+        return LValue::Direct(m_Builder, type->GetBase(), Get());
+    return std::cerr
+        << "cannot dereference non pointer type " << m_Type->GetName()
+        << std::endl
+        << ErrMark<LValuePtr>();
 }
 
 Brewer::RValuePtr Brewer::RValue::Direct(Builder& builder, const TypePtr& type, llvm::Value* value)

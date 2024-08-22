@@ -104,6 +104,24 @@ namespace Brewer
         ExprPtr Index;
     };
 
+    struct MemberExpression : Expression
+    {
+        MemberExpression(const SourceLocation&,
+                         const TypePtr&,
+                         ExprPtr object,
+                         std::string member_name,
+                         size_t member,
+                         bool dereference);
+
+        std::ostream& Dump(std::ostream&) const override;
+        ValuePtr GenIR(Builder&) const override;
+
+        ExprPtr Object;
+        std::string MemberName;
+        size_t Member;
+        bool Dereference;
+    };
+
     struct SymbolExpression : Expression
     {
         SymbolExpression(const SourceLocation&, const TypePtr&, std::string name);

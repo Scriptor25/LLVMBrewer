@@ -204,7 +204,7 @@ llvm::PointerType* Brewer::PointerType::GenIR(Builder& builder) const
     return llvm::PointerType::get(builder.IRContext(), 0);
 }
 
-Brewer::TypePtr Brewer::PointerType::Base() const
+Brewer::TypePtr Brewer::PointerType::GetBase() const
 {
     return m_Base;
 }
@@ -228,12 +228,12 @@ llvm::ArrayType* Brewer::ArrayType::GenIR(Builder& builder) const
     return llvm::ArrayType::get(m_Base->GenIR(builder), m_Length);
 }
 
-Brewer::TypePtr Brewer::ArrayType::Base() const
+Brewer::TypePtr Brewer::ArrayType::GetBase() const
 {
     return m_Base;
 }
 
-size_t Brewer::ArrayType::Length() const
+size_t Brewer::ArrayType::GetLength() const
 {
     return m_Length;
 }
@@ -289,6 +289,22 @@ llvm::StructType* Brewer::StructType::GenIR(Builder& builder) const
     return llvm::StructType::get(builder.IRContext(), elements, false);
 }
 
+Brewer::StructElement& Brewer::StructType::GetElement(const size_t i)
+{
+    return m_Elements[i];
+}
+
+Brewer::TypePtr Brewer::StructType::GetElement(const std::string& name, size_t& index)
+{
+    for (size_t i = 0; i < m_Elements.size(); ++i)
+        if (m_Elements[i].Name == name)
+        {
+            index = i;
+            return m_Elements[i].Type;
+        }
+    return {};
+}
+
 Brewer::FunctionTypePtr Brewer::FunctionType::Get(const TypePtr& result,
                                                   const std::vector<TypePtr>& params,
                                                   const bool vararg)
@@ -331,13 +347,18 @@ llvm::FunctionType* Brewer::FunctionType::GenIR(Builder& builder) const
     return llvm::FunctionType::get(m_Result->GenIR(builder), params, m_VarArg);
 }
 
-Brewer::TypePtr Brewer::FunctionType::Result()
+Brewer::TypePtr Brewer::FunctionType::GetResult()
 {
     return m_Result;
 }
 
-Brewer::TypePtr Brewer::FunctionType::Param(const size_t i)
+Brewer::TypePtr Brewer::FunctionType::GetParam(const size_t i)
 {
     if (i >= m_Params.size() && m_VarArg) return {};
     return m_Params[i];
+}
+
+bool Brewer::FunctionType::IsVarArg() const
+{
+    return m_VarArg;
 }

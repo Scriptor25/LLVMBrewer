@@ -12,10 +12,10 @@ namespace Brewer
         virtual ~Value();
 
         [[nodiscard]] Builder& GetBuilder() const;
-
         [[nodiscard]] TypePtr GetType() const;
-
         [[nodiscard]] llvm::Type* GetIRType() const;
+
+        [[nodiscard]] LValuePtr Dereference() const;
 
         [[nodiscard]] virtual llvm::Value* Get() const = 0;
 

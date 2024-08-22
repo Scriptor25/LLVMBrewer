@@ -29,7 +29,7 @@ Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
     const auto type =
         std::dynamic_pointer_cast<FunctionType>(
             std::dynamic_pointer_cast<PointerType>(
-                callee->GetType())->Base());
+                callee->GetType())->GetBase());
     if (!type)
         return std::cerr
             << "at " << Location << ": "
@@ -45,7 +45,7 @@ Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
     {
         auto arg = Args[i]->GenIR(builder);
         if (!arg) return {};
-        if (auto dest = type->Param(i))
+        if (auto dest = type->GetParam(i))
         {
             arg = builder.GenCast(arg, dest);
             if (!arg) return {};
@@ -61,5 +61,5 @@ Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
             << std::endl
             << ErrMark<ValuePtr>();
 
-    return RValue::Direct(builder, type->Result(), result);
+    return RValue::Direct(builder, type->GetResult(), result);
 }

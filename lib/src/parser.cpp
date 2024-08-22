@@ -608,6 +608,8 @@ Brewer::ExprPtr Brewer::Parser::ParseCall()
     if (!base) return {};
     if (At("["))
         base = ParseIndex(std::move(base));
+    if (At(".") || At("!"))
+        base = ParseMember(std::move(base));
     return base;
 }
 
@@ -628,7 +630,7 @@ Brewer::ExprPtr Brewer::Parser::ParseCall(ExprPtr callee)
         }
 
         auto type = std::dynamic_pointer_cast<FunctionType>(
-            std::dynamic_pointer_cast<PointerType>(callee->Type)->Base())->Result();
+            std::dynamic_pointer_cast<PointerType>(callee->Type)->GetBase())->GetResult();
 
         callee = std::make_unique<CallExpression>(Location, type, std::move(callee), args);
     }
@@ -656,9 +658,12 @@ Brewer::ExprPtr Brewer::Parser::ParseUnary(ExprPtr operand)
 
 Brewer::ExprPtr Brewer::Parser::ParseIndex()
 {
-    auto base = ParsePrimary();
+    auto base = ParseMember();
     if (!base) return {};
-    return ParseIndex(std::move(base));
+    base = ParseIndex(std::move(base));
+    if (At(".") || At("!"))
+        base = ParseMember(std::move(base));
+    return base;
 }
 
 Brewer::ExprPtr Brewer::Parser::ParseIndex(ExprPtr base)
@@ -671,12 +676,53 @@ Brewer::ExprPtr Brewer::Parser::ParseIndex(ExprPtr base)
         Expect("]");
 
         TypePtr element;
-        if (const auto type = std::dynamic_pointer_cast<PointerType>(base->Type)) element = type->Base();
-        if (const auto type = std::dynamic_pointer_cast<ArrayType>(base->Type)) element = type->Base();
+        if (const auto type = std::dynamic_pointer_cast<PointerType>(base->Type)) element = type->GetBase();
+        if (const auto type = std::dynamic_pointer_cast<ArrayType>(base->Type)) element = type->GetBase();
         base = std::make_unique<IndexExpression>(Location, element, std::move(base), std::move(index));
     }
 
     return base;
+}
+
+Brewer::ExprPtr Brewer::Parser::ParseMember()
+{
+    auto object = ParsePrimary();
+    if (!object) return {};
+    return ParseMember(std::move(object));
+}
+
+Brewer::ExprPtr Brewer::Parser::ParseMember(ExprPtr object)
+{
+    while (At(".") || At("!"))
+    {
+        auto [Location, Type, Value] = Skip();
+        auto member = Expect(TokenType_Name).Value;
+        auto dereference = Value == "!";
+
+        TypePtr type;
+        size_t index;
+
+        if (dereference)
+        {
+            auto ptr_type = std::dynamic_pointer_cast<PointerType>(object->Type);
+            type = std::dynamic_pointer_cast<StructType>(ptr_type)->GetElement(member, index);
+        }
+        else
+        {
+            type = std::dynamic_pointer_cast<StructType>(object->Type)->GetElement(member, index);
+        }
+
+        if (!type)
+            return std::cerr
+                << "at " << Location << ": "
+                << "no member " << member << " in type " << object->Type->GetName()
+                << std::endl
+                << ErrMark<ExprPtr>();
+
+        object = std::make_unique<MemberExpression>(Location, type, std::move(object), member, index, dereference);
+    }
+
+    return object;
 }
 
 Brewer::ExprPtr Brewer::Parser::ParsePrimary()

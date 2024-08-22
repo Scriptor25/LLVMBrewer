@@ -70,7 +70,7 @@ namespace Brewer
         PointerType(const std::string& name, const TypePtr& base);
         llvm::PointerType* GenIR(Builder&) const override;
 
-        [[nodiscard]] TypePtr Base() const;
+        [[nodiscard]] TypePtr GetBase() const;
 
     private:
         TypePtr m_Base;
@@ -85,8 +85,8 @@ namespace Brewer
 
         llvm::ArrayType* GenIR(Builder&) const override;
 
-        [[nodiscard]] TypePtr Base() const;
-        [[nodiscard]] size_t Length() const;
+        [[nodiscard]] TypePtr GetBase() const;
+        [[nodiscard]] size_t GetLength() const;
 
     private:
         TypePtr m_Base;
@@ -111,6 +111,9 @@ namespace Brewer
 
         llvm::StructType* GenIR(Builder&) const override;
 
+        StructElement& GetElement(size_t);
+        TypePtr GetElement(const std::string&, size_t&);
+
     private:
         std::vector<StructElement> m_Elements;
     };
@@ -128,8 +131,9 @@ namespace Brewer
                      bool vararg);
         llvm::FunctionType* GenIR(Builder&) const override;
 
-        TypePtr Result();
-        TypePtr Param(size_t i);
+        TypePtr GetResult();
+        TypePtr GetParam(size_t);
+        [[nodiscard]] bool IsVarArg() const;
 
     private:
         TypePtr m_Result;

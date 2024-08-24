@@ -24,6 +24,75 @@ Brewer::TypePtr& Brewer::Context::GetSymbol(const std::string& name)
     return m_Symbols[name];
 }
 
+Brewer::TypePtr Brewer::Context::GetVoidTy()
+{
+    return m_Types["void"];
+}
+
+Brewer::TypePtr Brewer::Context::GetIntNTy(size_t n)
+{
+    switch (n)
+    {
+    case 1: return m_Types["i1"];
+    case 8: return m_Types["i8"];
+    case 16: return m_Types["i16"];
+    case 32: return m_Types["i32"];
+    case 64: return m_Types["i64"];
+    default: return {};
+    }
+}
+
+Brewer::TypePtr Brewer::Context::GetInt1Ty()
+{
+    return m_Types["i1"];
+}
+
+Brewer::TypePtr Brewer::Context::GetInt8Ty()
+{
+    return m_Types["i8"];
+}
+
+Brewer::TypePtr Brewer::Context::GetInt16Ty()
+{
+    return m_Types["i16"];
+}
+
+Brewer::TypePtr Brewer::Context::GetInt32Ty()
+{
+    return m_Types["i32"];
+}
+
+Brewer::TypePtr Brewer::Context::GetInt64Ty()
+{
+    return m_Types["i64"];
+}
+
+Brewer::TypePtr Brewer::Context::GetFloatNTy(size_t n)
+{
+    switch (n)
+    {
+    case 16: return m_Types["f16"];
+    case 32: return m_Types["f32"];
+    case 64: return m_Types["f64"];
+    default: return {};
+    }
+}
+
+Brewer::TypePtr Brewer::Context::GetFloat16Ty()
+{
+    return m_Types["f16"];
+}
+
+Brewer::TypePtr Brewer::Context::GetFloat32Ty()
+{
+    return m_Types["f32"];
+}
+
+Brewer::TypePtr Brewer::Context::GetFloat64Ty()
+{
+    return m_Types["f64"];
+}
+
 Brewer::TypePtr& Brewer::Context::CurrentResult()
 {
     return m_CurrentResult;

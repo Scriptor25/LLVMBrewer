@@ -14,6 +14,18 @@ namespace Brewer
         TypePtr& GetType(const std::string& name);
         TypePtr& GetSymbol(const std::string& name);
 
+        TypePtr GetVoidTy();
+        TypePtr GetIntNTy(size_t);
+        TypePtr GetInt1Ty();
+        TypePtr GetInt8Ty();
+        TypePtr GetInt16Ty();
+        TypePtr GetInt32Ty();
+        TypePtr GetInt64Ty();
+        TypePtr GetFloatNTy(size_t);
+        TypePtr GetFloat16Ty();
+        TypePtr GetFloat32Ty();
+        TypePtr GetFloat64Ty();
+
         TypePtr& CurrentResult();
 
         void Push();

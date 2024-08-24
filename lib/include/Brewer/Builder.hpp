@@ -55,6 +55,7 @@ namespace Brewer
         void EmitToFile(const std::string& filename) const;
 
         ValuePtr& GetFunction(const TypePtr&, const std::string&);
+        ValuePtr GetCtor(const TypePtr&);
 
         void Push();
         void Pop();

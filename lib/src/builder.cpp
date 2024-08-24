@@ -765,6 +765,20 @@ Brewer::ValuePtr& Brewer::Builder::GetFunction(const TypePtr& self, const std::s
     return m_Functions[self][name];
 }
 
+Brewer::ValuePtr Brewer::Builder::GetCtor(const TypePtr& type)
+{
+    for (const auto& [self, func] : m_Functions[{}])
+    {
+        const auto ptr_type = std::dynamic_pointer_cast<PointerType>(func->GetType());
+        const auto fun_type = std::dynamic_pointer_cast<FunctionType>(ptr_type->GetBase());
+        if (fun_type->GetMode() != FuncMode_Ctor) continue;
+        if (fun_type->GetSelf() != type) continue;
+        return func;
+    }
+
+    return {};
+}
+
 void Brewer::Builder::Push()
 {
     m_Stack.push_back(m_Symbols);

@@ -28,7 +28,7 @@ static Brewer::StmtPtr parse_def(Brewer::Parser& parser)
     auto proto = parse_proto(parser);
     parser.GetContext().Push();
     for (auto& param : proto.Params)
-        parser.GetContext().GetSymbol(param) = parser.GetContext().GetType("f64");
+        parser.GetContext().GetSymbol(param) = parser.GetContext().GetFloat64Ty();
     auto body = parser.ParseExpr();
     parser.GetContext().Pop();
     if (!body) return {};

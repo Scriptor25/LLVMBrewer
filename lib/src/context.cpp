@@ -19,6 +19,11 @@ Brewer::TypePtr& Brewer::Context::GetType(const std::string& name)
     return m_Types[name];
 }
 
+Brewer::TypePtr& Brewer::Context::GetFunction(const TypePtr& self, const std::string& name)
+{
+    return m_Functions[self][name];
+}
+
 Brewer::TypePtr& Brewer::Context::GetSymbol(const std::string& name)
 {
     return m_Symbols[name];
@@ -93,6 +98,11 @@ Brewer::TypePtr Brewer::Context::GetFloat64Ty()
     return m_Types["f64"];
 }
 
+Brewer::TypePtr Brewer::Context::GetInt8PtrTy()
+{
+    return PointerType::Get(GetInt8Ty());
+}
+
 Brewer::TypePtr& Brewer::Context::CurrentResult()
 {
     return m_CurrentResult;
@@ -100,11 +110,11 @@ Brewer::TypePtr& Brewer::Context::CurrentResult()
 
 void Brewer::Context::Push()
 {
-    m_SymbolStack.push_back(m_Symbols);
+    m_Stack.push_back(m_Symbols);
 }
 
 void Brewer::Context::Pop()
 {
-    m_Symbols = m_SymbolStack.back();
-    m_SymbolStack.pop_back();
+    m_Symbols = m_Stack.back();
+    m_Stack.pop_back();
 }

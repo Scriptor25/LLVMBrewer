@@ -2,7 +2,6 @@
 #include <Brewer/Builder.hpp>
 #include <Brewer/Context.hpp>
 #include <Brewer/Parser.hpp>
-#include <Brewer/Type.hpp>
 #include <Brewer/Util.hpp>
 #include <Brewer/Value.hpp>
 
@@ -36,36 +35,33 @@ Brewer::ExprPtr Brewer::Parser::ParsePrimary()
     {
         auto [Location, Type, Value] = Skip();
         auto type = m_Context.GetSymbol(Value);
+        if (!type) type = m_Context.GetFunction({}, Value);
+        if (!type)
+            return std::cerr
+                << "at " << Location << ": "
+                << "no such symbol '" << Value << "'"
+                << std::endl
+                << ErrMark<ExprPtr>();
         return std::make_unique<SymbolExpression>(Location, type, Value);
     }
     if (At(TokenType_Bin))
-        return std::make_unique<ConstIntExpression>(loc,
-                                                    Type::Get(m_Context, "i64"),
-                                                    std::stoull(Skip().Value, nullptr, 2));
+        return std::make_unique<ConstIntExpression>(loc, m_Context.GetInt64Ty(), std::stoull(Skip().Value, nullptr, 2));
     if (At(TokenType_Oct))
-        return std::make_unique<ConstIntExpression>(loc,
-                                                    Type::Get(m_Context, "i64"),
-                                                    std::stoull(Skip().Value, nullptr, 8));
+        return std::make_unique<ConstIntExpression>(loc, m_Context.GetInt64Ty(), std::stoull(Skip().Value, nullptr, 8));
     if (At(TokenType_Dec))
         return std::make_unique<ConstIntExpression>(loc,
-                                                    Type::Get(m_Context, "i64"),
+                                                    m_Context.GetInt64Ty(),
                                                     std::stoull(Skip().Value, nullptr, 10));
     if (At(TokenType_Hex))
         return std::make_unique<ConstIntExpression>(loc,
-                                                    Type::Get(m_Context, "i64"),
+                                                    m_Context.GetInt64Ty(),
                                                     std::stoull(Skip().Value, nullptr, 16));
     if (At(TokenType_Float))
-        return std::make_unique<ConstFloatExpression>(loc,
-                                                      Type::Get(m_Context, "f64"),
-                                                      std::stold(Skip().Value));
+        return std::make_unique<ConstFloatExpression>(loc, m_Context.GetFloat64Ty(), std::stold(Skip().Value));
     if (At(TokenType_Char))
-        return std::make_unique<ConstCharExpression>(loc,
-                                                     Type::Get(m_Context, "i8"),
-                                                     Skip().Value[0]);
+        return std::make_unique<ConstCharExpression>(loc, m_Context.GetInt8Ty(), Skip().Value[0]);
     if (At(TokenType_String))
-        return std::make_unique<ConstStringExpression>(loc,
-                                                       PointerType::Get(Type::Get(m_Context, "i8")),
-                                                       Skip().Value);
+        return std::make_unique<ConstStringExpression>(loc, m_Context.GetInt8PtrTy(), Skip().Value);
 
     const auto [Location, Type, Value] = Skip();
     return std::cerr

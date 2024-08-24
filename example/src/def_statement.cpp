@@ -1,7 +1,6 @@
 #include <iostream>
 #include <Brewer/Builder.hpp>
 #include <Brewer/Type.hpp>
-#include <Brewer/Util.hpp>
 #include <Brewer/Value.hpp>
 #include <llvm/IR/Verifier.h>
 #include <Test/AST.hpp>
@@ -32,7 +31,7 @@ void Test::DefStatement::GenIRNoVal(Brewer::Builder& builder) const
     {
         const auto name = Proto.Params[i];
         const auto param = fn->getArg(i);
-        builder[name] = Brewer::RValue::Direct(builder, Brewer::Type::Get(builder.GetContext(), "f64"), param);
+        builder.GetSymbol(name) = Brewer::RValue::Direct(builder, Brewer::Type::Get(builder.GetContext(), "f64"), param);
     }
 
     const auto return_value = Body->GenIR(builder);

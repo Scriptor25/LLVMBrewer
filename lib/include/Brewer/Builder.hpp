@@ -54,9 +54,11 @@ namespace Brewer
         void Dump() const;
         void EmitToFile(const std::string& filename) const;
 
+        ValuePtr& GetFunction(const TypePtr&, const std::string&);
+
         void Push();
         void Pop();
-        ValuePtr& operator[](const std::string& name);
+        ValuePtr& GetSymbol(const std::string& name);
 
         ValuePtr GenCast(const ValuePtr& src, const TypePtr& dst);
 
@@ -70,7 +72,9 @@ namespace Brewer
         std::map<std::string, BinaryFn> m_BinaryFns;
         std::map<std::string, UnaryFn> m_UnaryFns;
 
+        std::map<TypePtr, std::map<std::string, ValuePtr>> m_Functions;
+
         std::vector<std::map<std::string, ValuePtr>> m_Stack;
-        std::map<std::string, ValuePtr> m_Values;
+        std::map<std::string, ValuePtr> m_Symbols;
     };
 }

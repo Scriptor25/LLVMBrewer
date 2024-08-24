@@ -18,8 +18,8 @@ std::ostream& Test::Prototype::Dump(std::ostream& stream) const
 
 llvm::Function* Test::Prototype::GenIR(Brewer::Builder& builder) const
 {
-    if (const auto fn = builder.IRModule().getFunction(Name))
-        return fn;
+    auto& ref = builder.GetFunction({}, Name);
+    if (ref) return llvm::cast<llvm::Function>(ref->Get());
 
     const auto type = GetType(builder.GetContext());
     const auto fn_ty = llvm::cast<llvm::FunctionType>(type->GetBase()->GenIR(builder));
@@ -28,7 +28,7 @@ llvm::Function* Test::Prototype::GenIR(Brewer::Builder& builder) const
     for (size_t i = 0; i < Params.size(); ++i)
         fn->getArg(i)->setName(Params[i]);
 
-    builder[Name] = Brewer::RValue::Direct(builder, type, fn);
+    ref = Brewer::RValue::Direct(builder, type, fn);
     return fn;
 }
 

@@ -760,20 +760,25 @@ void Brewer::Builder::EmitToFile(const std::string& filename) const
     dest.flush();
 }
 
+Brewer::ValuePtr& Brewer::Builder::GetFunction(const TypePtr& self, const std::string& name)
+{
+    return m_Functions[self][name];
+}
+
 void Brewer::Builder::Push()
 {
-    m_Stack.push_back(m_Values);
+    m_Stack.push_back(m_Symbols);
 }
 
 void Brewer::Builder::Pop()
 {
-    m_Values = m_Stack.back();
+    m_Symbols = m_Stack.back();
     m_Stack.pop_back();
 }
 
-Brewer::ValuePtr& Brewer::Builder::operator[](const std::string& name)
+Brewer::ValuePtr& Brewer::Builder::GetSymbol(const std::string& name)
 {
-    return m_Values[name];
+    return m_Symbols[name];
 }
 
 Brewer::ValuePtr Brewer::Builder::GenCast(const ValuePtr& src, const TypePtr& dst)

@@ -14,7 +14,8 @@ std::ostream& Brewer::SymbolExpression::Dump(std::ostream& stream) const
 
 Brewer::ValuePtr Brewer::SymbolExpression::GenIR(Builder& builder) const
 {
-    if (const auto& symbol = builder[Name]) return symbol;
+    if (const auto& value = builder.GetSymbol(Name)) return value;
+    if (const auto& value = builder.GetFunction({}, Name)) return value;
     return std::cerr
         << "at " << Location << ": "
         << "no such symbol '" << Name << "'"

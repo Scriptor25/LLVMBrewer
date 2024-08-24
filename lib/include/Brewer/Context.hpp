@@ -12,6 +12,7 @@ namespace Brewer
         Context();
 
         TypePtr& GetType(const std::string& name);
+        TypePtr& GetFunction(const TypePtr& self, const std::string& name);
         TypePtr& GetSymbol(const std::string& name);
 
         TypePtr GetVoidTy();
@@ -26,6 +27,8 @@ namespace Brewer
         TypePtr GetFloat32Ty();
         TypePtr GetFloat64Ty();
 
+        TypePtr GetInt8PtrTy();
+
         TypePtr& CurrentResult();
 
         void Push();
@@ -34,7 +37,9 @@ namespace Brewer
     private:
         std::map<std::string, TypePtr> m_Types;
 
-        std::vector<std::map<std::string, TypePtr>> m_SymbolStack;
+        std::map<TypePtr, std::map<std::string, TypePtr>> m_Functions;
+
+        std::vector<std::map<std::string, TypePtr>> m_Stack;
         std::map<std::string, TypePtr> m_Symbols;
 
         TypePtr m_CurrentResult;

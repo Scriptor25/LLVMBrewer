@@ -24,6 +24,8 @@ namespace Brewer
     {
     public:
         static TypePtr& Get(Context&, const std::string& name);
+        static TypePtr GetFunPtr(const TypePtr& result, const std::vector<TypePtr>& params, bool vararg);
+
         static TypePtr GetHigherOrder(const TypePtr&, const TypePtr&);
 
         Type(Context&, std::string name, TypeID id, size_t size);

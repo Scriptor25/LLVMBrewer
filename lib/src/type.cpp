@@ -10,6 +10,11 @@ Brewer::TypePtr& Brewer::Type::Get(Context& context, const std::string& name)
     return context.GetType(name);
 }
 
+Brewer::TypePtr Brewer::Type::GetFunPtr(const TypePtr& result, const std::vector<TypePtr>& params, const bool vararg)
+{
+    return PointerType::Get(FunctionType::Get(result, params, vararg));
+}
+
 Brewer::TypePtr Brewer::Type::GetHigherOrder(const TypePtr& a, const TypePtr& b)
 {
     if (a == b)

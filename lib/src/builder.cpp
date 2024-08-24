@@ -795,6 +795,11 @@ void Brewer::Builder::Pop()
     m_Stack.pop_back();
 }
 
+Brewer::TypePtr& Brewer::Builder::CurrentResult()
+{
+    return m_CurrentResult;
+}
+
 Brewer::ValuePtr Brewer::Builder::GenCast(const ValuePtr& src, const TypePtr& dst)
 {
     const auto src_type = src->GetType();

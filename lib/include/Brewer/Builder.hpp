@@ -62,6 +62,8 @@ namespace Brewer
         void Push();
         void Pop();
 
+        TypePtr& CurrentResult();
+
         ValuePtr GenCast(const ValuePtr& src, const TypePtr& dst);
 
     private:
@@ -78,5 +80,7 @@ namespace Brewer
 
         std::vector<std::map<std::string, ValuePtr>> m_Stack;
         std::map<std::string, ValuePtr> m_Symbols;
+
+        TypePtr m_CurrentResult;
     };
 }

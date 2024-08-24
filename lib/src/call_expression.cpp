@@ -66,7 +66,7 @@ Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
     if (off) args[0] = self->GetPtr();
     for (size_t i = off; i < args.size(); ++i)
     {
-        auto arg = Args[i]->GenIR(builder);
+        auto arg = Args[i - off]->GenIR(builder);
         if (!arg) return {};
         if (auto dest = type->GetParam(i - off))
         {

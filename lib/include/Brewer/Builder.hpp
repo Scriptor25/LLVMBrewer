@@ -14,6 +14,7 @@ namespace Brewer
     class Builder
     {
     public:
+        // predefined binary operators
         static ValuePtr GenEQ(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
         static ValuePtr GenNE(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
         static ValuePtr GenLT(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
@@ -35,6 +36,7 @@ namespace Brewer
         static ValuePtr GenLShr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
         static ValuePtr GenAShr(Builder&, const ValuePtr& lhs, const ValuePtr& rhs, TypePtr*);
 
+        // predefined unary operators
         static ValuePtr GenInc(Builder&, const ValuePtr&, TypePtr*);
         static ValuePtr GenDec(Builder&, const ValuePtr&, TypePtr*);
         static ValuePtr GenNeg(Builder&, const ValuePtr&, TypePtr*);
@@ -77,7 +79,6 @@ namespace Brewer
         std::map<std::string, UnaryFn> m_UnaryFns;
 
         std::map<TypePtr, std::map<std::string, ValuePtr>> m_Functions;
-
         std::vector<std::map<std::string, ValuePtr>> m_Stack;
         std::map<std::string, ValuePtr> m_Symbols;
 

@@ -3,11 +3,13 @@
 #include <Brewer/Value.hpp>
 #include <Test/AST.hpp>
 
-Test::IfExpression::IfExpression(const Brewer::SourceLocation& loc,
-                                 const Brewer::TypePtr& type,
-                                 Brewer::ExprPtr condition,
-                                 Brewer::ExprPtr then,
-                                 Brewer::ExprPtr else_)
+using namespace Brewer;
+
+Test::IfExpression::IfExpression(const SourceLocation& loc,
+                                 const TypePtr& type,
+                                 ExprPtr condition,
+                                 ExprPtr then,
+                                 ExprPtr else_)
     : Expression(loc, type), Condition(std::move(condition)), Then(std::move(then)), Else(std::move(else_))
 {
 }
@@ -17,7 +19,7 @@ std::ostream& Test::IfExpression::Dump(std::ostream& stream) const
     return stream << "if " << Condition << " then " << Then << " else " << Else;
 }
 
-Brewer::ValuePtr Test::IfExpression::GenIR(Brewer::Builder& builder) const
+ValuePtr Test::IfExpression::GenIR(Builder& builder) const
 {
     const auto bkp = builder.IRBuilder().GetInsertBlock();
     const auto f = bkp->getParent();
@@ -39,7 +41,7 @@ Brewer::ValuePtr Test::IfExpression::GenIR(Brewer::Builder& builder) const
     if (!else_) return {};
     else_bb = builder.IRBuilder().GetInsertBlock();
 
-    const auto type = Brewer::Type::GetHigherOrder(then->GetType(), else_->GetType());
+    const auto type = Type::GetHigherOrder(then->GetType(), else_->GetType());
     const auto ty = type->GenIR(builder);
 
     builder.IRBuilder().SetInsertPoint(then_bb);
@@ -55,5 +57,5 @@ Brewer::ValuePtr Test::IfExpression::GenIR(Brewer::Builder& builder) const
     phi->addIncoming(then_result, then_bb);
     phi->addIncoming(else_result, else_bb);
 
-    return Brewer::RValue::Direct(builder, then->GetType(), phi);
+    return RValue::Direct(builder, then->GetType(), phi);
 }

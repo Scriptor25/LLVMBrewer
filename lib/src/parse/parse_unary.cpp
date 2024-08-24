@@ -16,7 +16,7 @@ Brewer::ExprPtr Brewer::Parser::ParseUnary(ExprPtr operand)
     {
         auto [Location, Type, Value] = Skip();
         TypePtr type;
-        m_Builder.GenUnaryFn(Value)(m_Builder, RValue::Empty(m_Builder, operand->Type), &type);
+        m_Builder.GenUnaryFn(Value)(m_Builder, Value::Empty(operand->Type), &type);
         operand = std::make_unique<UnaryExpression>(Location, type, Value, std::move(operand), false);
     }
 

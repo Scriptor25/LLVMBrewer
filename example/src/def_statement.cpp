@@ -5,9 +5,9 @@
 #include <llvm/IR/Verifier.h>
 #include <Test/AST.hpp>
 
-Test::DefStatement::DefStatement(const Brewer::SourceLocation& loc,
-                                 Prototype proto,
-                                 Brewer::ExprPtr body)
+using namespace Brewer;
+
+Test::DefStatement::DefStatement(const SourceLocation& loc, Prototype proto, ExprPtr body)
     : Statement(loc), Proto(std::move(proto)), Body(std::move(body))
 {
 }
@@ -17,7 +17,7 @@ std::ostream& Test::DefStatement::Dump(std::ostream& stream) const
     return stream << "def " << Proto << ' ' << Body;
 }
 
-void Test::DefStatement::GenIRNoVal(Brewer::Builder& builder) const
+void Test::DefStatement::GenIRNoVal(Builder& builder) const
 {
     const auto fn = Proto.GenIR(builder);
     if (!fn || !fn->empty()) return;
@@ -31,7 +31,8 @@ void Test::DefStatement::GenIRNoVal(Brewer::Builder& builder) const
     {
         const auto name = Proto.Params[i];
         const auto param = fn->getArg(i);
-        builder.GetSymbol(name) = Brewer::RValue::Direct(builder, Brewer::Type::Get(builder.GetContext(), "f64"), param);
+        builder.GetSymbol(name) =
+            RValue::Direct(builder, Type::Get(builder.GetContext(), "f64"), param);
     }
 
     const auto return_value = Body->GenIR(builder);

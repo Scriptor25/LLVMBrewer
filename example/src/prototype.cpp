@@ -6,6 +6,8 @@
 #include <Brewer/Value.hpp>
 #include <Test/AST.hpp>
 
+using namespace Brewer;
+
 Test::Prototype::Prototype(std::string name, const std::vector<std::string>& params)
     : Name(std::move(name)), Params(params)
 {
@@ -16,7 +18,7 @@ std::ostream& Test::Prototype::Dump(std::ostream& stream) const
     return Brewer::operator<<(stream << Name << '(', Params) << ')';
 }
 
-llvm::Function* Test::Prototype::GenIR(Brewer::Builder& builder) const
+llvm::Function* Test::Prototype::GenIR(Builder& builder) const
 {
     auto& ref = builder.GetFunction({}, Name);
     if (ref && ref->Get()) return llvm::cast<llvm::Function>(ref->Get());
@@ -28,15 +30,15 @@ llvm::Function* Test::Prototype::GenIR(Brewer::Builder& builder) const
     for (size_t i = 0; i < Params.size(); ++i)
         fn->getArg(i)->setName(Params[i]);
 
-    ref = Brewer::RValue::Direct(builder, type, fn);
+    ref = RValue::Direct(builder, type, fn);
     return fn;
 }
 
-Brewer::PointerTypePtr Test::Prototype::GetType(Brewer::Context& context) const
+PointerTypePtr Test::Prototype::GetType(Context& context) const
 {
     const auto flt_ty = context.GetFloat64Ty();
     const std::vector params(Params.size(), flt_ty);
-    return Brewer::Type::GetFunPtr(Brewer::FuncMode_Normal, {}, flt_ty, params, false);
+    return Type::GetFunPtr(FuncMode_Normal, {}, flt_ty, params, false);
 }
 
 std::ostream& Test::operator<<(std::ostream& stream, const Prototype& proto)

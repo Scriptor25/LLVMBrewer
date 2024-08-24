@@ -5,16 +5,22 @@
 #include <Brewer/Util.hpp>
 #include <Brewer/Value.hpp>
 
-Brewer::Value::Value(Builder& builder, TypePtr type)
-    : m_Builder(builder), m_Type(std::move(type)), m_IRType(m_Type->GenIR(m_Builder))
+Brewer::ValuePtr Brewer::Value::Empty(const TypePtr& type)
 {
+    return std::make_shared<Value>(nullptr, type);
+}
+
+Brewer::Value::Value(Builder* builder, TypePtr type)
+    : m_Builder(builder), m_Type(std::move(type))
+{
+    m_IRType = m_Builder ? m_Type->GenIR(*m_Builder) : nullptr;
 }
 
 Brewer::Value::~Value() = default;
 
 Brewer::Builder& Brewer::Value::GetBuilder() const
 {
-    return m_Builder;
+    return *m_Builder;
 }
 
 Brewer::TypePtr Brewer::Value::GetType() const
@@ -24,22 +30,26 @@ Brewer::TypePtr Brewer::Value::GetType() const
 
 llvm::Type* Brewer::Value::GetIRType() const
 {
+    if (!m_Builder)
+        return std::cerr << "empty value" << std::endl << ErrMark<llvm::Type*>();
     return m_IRType;
 }
 
 Brewer::LValuePtr Brewer::Value::Dereference() const
 {
+    if (!m_Builder)
+        return std::cerr << "empty value" << std::endl << ErrMark<LValuePtr>();
     if (const auto type = std::dynamic_pointer_cast<PointerType>(m_Type))
-        return LValue::Direct(m_Builder, type->GetBase(), Get());
+        return LValue::Direct(*m_Builder, type->GetBase(), Get());
     return std::cerr
         << "cannot dereference non pointer type " << m_Type->GetName()
         << std::endl
         << ErrMark<LValuePtr>();
 }
 
-Brewer::RValuePtr Brewer::RValue::Empty(Builder& builder, const TypePtr& type)
+llvm::Value* Brewer::Value::Get() const
 {
-    return std::make_shared<RValue>(builder, type, nullptr);
+    return nullptr;
 }
 
 Brewer::RValuePtr Brewer::RValue::Direct(Builder& builder, const TypePtr& type, llvm::Value* value)
@@ -48,7 +58,7 @@ Brewer::RValuePtr Brewer::RValue::Direct(Builder& builder, const TypePtr& type, 
 }
 
 Brewer::RValue::RValue(Builder& builder, const TypePtr& type, llvm::Value* value)
-    : Value(builder, type), m_Value(value)
+    : Value(&builder, type), m_Value(value)
 {
 }
 
@@ -73,7 +83,7 @@ Brewer::LValuePtr Brewer::LValue::Direct(Builder& builder, const TypePtr& type, 
 }
 
 Brewer::LValue::LValue(Builder& builder, const TypePtr& type, llvm::Value* ptr)
-    : Value(builder, type), m_Ptr(ptr)
+    : Value(&builder, type), m_Ptr(ptr)
 {
 }
 

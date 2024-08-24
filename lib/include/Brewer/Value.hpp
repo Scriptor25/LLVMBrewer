@@ -8,19 +8,20 @@ namespace Brewer
     class Value
     {
     public:
-        explicit Value(Builder&, TypePtr type);
+        static ValuePtr Empty(const TypePtr& type);
+
+        Value(Builder*, TypePtr type);
         virtual ~Value();
 
         [[nodiscard]] Builder& GetBuilder() const;
         [[nodiscard]] TypePtr GetType() const;
         [[nodiscard]] llvm::Type* GetIRType() const;
-
         [[nodiscard]] LValuePtr Dereference() const;
 
-        [[nodiscard]] virtual llvm::Value* Get() const = 0;
+        [[nodiscard]] virtual llvm::Value* Get() const;
 
     private:
-        Builder& m_Builder;
+        Builder* m_Builder;
         TypePtr m_Type;
         llvm::Type* m_IRType;
     };
@@ -28,7 +29,6 @@ namespace Brewer
     class RValue : public Value
     {
     public:
-        static RValuePtr Empty(Builder&, const TypePtr& type);
         static RValuePtr Direct(Builder&, const TypePtr& type, llvm::Value* value);
 
         RValue(Builder&, const TypePtr& type, llvm::Value* value);

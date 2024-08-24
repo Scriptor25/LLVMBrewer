@@ -8,46 +8,46 @@
 #include <Brewer/Value.hpp>
 #include <Test/AST.hpp>
 
-static Test::Prototype parse_proto(Brewer::Parser& parser)
+using namespace Brewer;
+
+static Test::Prototype parse_proto(Parser& parser)
 {
-    auto [Location, Type, Value] = parser.Expect(Brewer::TokenType_Name);
+    auto [Location, Type, Value] = parser.Expect(TokenType_Name);
     std::vector<std::string> params;
     parser.Expect("(");
     while (!parser.NextIfAt(")"))
     {
-        auto param = parser.Expect(Brewer::TokenType_Name).Value;
+        auto param = parser.Expect(TokenType_Name).Value;
         params.push_back(param);
     }
 
     Test::Prototype proto{Value, params};
 
-    parser.GetBuilder().GetFunction({}, Value)
-        = Brewer::RValue::Empty(parser.GetBuilder(), proto.GetType(parser.GetContext()));
+    parser.GetBuilder().GetFunction({}, Value) = Value::Empty(proto.GetType(parser.GetContext()));
     return proto;
 }
 
-static Brewer::StmtPtr parse_def(Brewer::Parser& parser)
+static StmtPtr parse_def(Parser& parser)
 {
     auto [Location, Type, Value] = parser.Expect("def");
     auto proto = parse_proto(parser);
     parser.GetBuilder().Push();
     for (auto& param : proto.Params)
-        parser.GetBuilder().GetSymbol(param) = Brewer::RValue::Empty(parser.GetBuilder(),
-                                                                     parser.GetContext().GetFloat64Ty());
+        parser.GetBuilder().GetSymbol(param) = Value::Empty(parser.GetContext().GetFloat64Ty());
     auto body = parser.ParseExpr();
     parser.GetBuilder().Pop();
     if (!body) return {};
     return std::make_unique<Test::DefStatement>(Location, proto, std::move(body));
 }
 
-static Brewer::StmtPtr parse_extern(Brewer::Parser& parser)
+static StmtPtr parse_extern(Parser& parser)
 {
     auto [Location, Type, Value] = parser.Expect("extern");
     auto proto = parse_proto(parser);
     return std::make_unique<Test::ExternStatement>(Location, proto);
 }
 
-static Brewer::ExprPtr parse_if(Brewer::Parser& parser)
+static ExprPtr parse_if(Parser& parser)
 {
     auto [Location, Type, Value] = parser.Expect("if");
     auto condition = parser.ParseExpr();
@@ -59,7 +59,7 @@ static Brewer::ExprPtr parse_if(Brewer::Parser& parser)
     auto else_ = parser.ParseExpr();
     if (!else_) return {};
 
-    auto type = Brewer::Type::GetHigherOrder(then->Type, else_->Type);
+    auto type = Type::GetHigherOrder(then->Type, else_->Type);
     if (!type) return {};
 
     return std::make_unique<Test::IfExpression>(Location,
@@ -92,7 +92,7 @@ int main(const int argc, const char** argv)
         return 1;
     }
 
-    Brewer::Pipeline()
+    Pipeline()
         .ParseStmtFn("def", parse_def)
         .ParseStmtFn("extern", parse_extern)
         .ParseExprFn("if", parse_if)

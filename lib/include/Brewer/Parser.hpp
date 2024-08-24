@@ -15,8 +15,8 @@ namespace Brewer
     public:
         Parser(Builder&, std::istream& stream, const std::string& filename);
 
-        [[nodiscard]] Context& GetContext() const;
         [[nodiscard]] Builder& GetBuilder() const;
+        [[nodiscard]] Context& GetContext() const;
 
         StmtFn& ParseStmtFn(const std::string&);
         ExprFn& ParseExprFn(const std::string&);
@@ -57,7 +57,6 @@ namespace Brewer
         ExprPtr ParseMember(ExprPtr);
         ExprPtr ParsePrimary();
 
-        Context& m_Context;
         Builder& m_Builder;
 
         std::istream& m_Stream;

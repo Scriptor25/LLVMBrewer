@@ -5,19 +5,19 @@
 #include <Brewer/Util.hpp>
 
 Brewer::Parser::Parser(Builder& builder, std::istream& stream, const std::string& filename)
-    : m_Context(builder.GetContext()), m_Builder(builder), m_Stream(stream), m_Location{filename, 1, 0}
+    : m_Builder(builder), m_Stream(stream), m_Location{filename, 1, 0}
 {
     Next();
-}
-
-Brewer::Context& Brewer::Parser::GetContext() const
-{
-    return m_Context;
 }
 
 Brewer::Builder& Brewer::Parser::GetBuilder() const
 {
     return m_Builder;
+}
+
+Brewer::Context& Brewer::Parser::GetContext() const
+{
+    return m_Builder.GetContext();
 }
 
 Brewer::StmtFn& Brewer::Parser::ParseStmtFn(const std::string& beg)

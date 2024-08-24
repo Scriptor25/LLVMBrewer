@@ -76,6 +76,8 @@ void Brewer::Pipeline::Build(std::istream& stream, const std::string& input_file
         ptr->GenIRNoVal(builder);
     }
 
+    builder.CloseGlobals();
+
     if (m_DumpIR) builder.Dump();
     if (m_EmitToFile) builder.EmitToFile(m_OutputFilename);
 }

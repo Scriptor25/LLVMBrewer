@@ -19,6 +19,18 @@ Brewer::Builder::Builder(Context& context, const std::string& module_id, const s
     m_IRModule = std::make_unique<llvm::Module>(module_id, *m_IRContext);
     m_IRModule->setSourceFileName(filename);
 
+    m_GlobalCtor = llvm::Function::Create(llvm::FunctionType::get(m_IRBuilder->getVoidTy(), false),
+                                          llvm::GlobalValue::InternalLinkage,
+                                          "brewer.global_ctor",
+                                          *m_IRModule);
+    m_GlobalDtor = llvm::Function::Create(llvm::FunctionType::get(m_IRBuilder->getVoidTy(), false),
+                                          llvm::GlobalValue::InternalLinkage,
+                                          "brewer.global_dtor",
+                                          *m_IRModule);
+
+    llvm::BasicBlock::Create(*m_IRContext, "entry", m_GlobalCtor);
+    llvm::BasicBlock::Create(*m_IRContext, "entry", m_GlobalDtor);
+
     m_BinaryFns["=="] = GenEQ;
     m_BinaryFns["!="] = GenNE;
     m_BinaryFns["<"] = GenLT;
@@ -45,6 +57,32 @@ Brewer::Builder::Builder(Context& context, const std::string& module_id, const s
     m_UnaryFns["-"] = GenNeg;
     m_UnaryFns["!"] = GenLNot;
     m_UnaryFns["~"] = GenNot;
+}
+
+llvm::Function* Brewer::Builder::GetGlobalCtor() const
+{
+    return m_GlobalCtor;
+}
+
+llvm::Function* Brewer::Builder::GetGlobalDtor() const
+{
+    return m_GlobalDtor;
+}
+
+void Brewer::Builder::CloseGlobals() const
+{
+    for (auto& bb : *m_GlobalCtor)
+    {
+        if (bb.getTerminator()) continue;
+        m_IRBuilder->SetInsertPoint(&bb);
+        m_IRBuilder->CreateRetVoid();
+    }
+    for (auto& bb : *m_GlobalDtor)
+    {
+        if (bb.getTerminator()) continue;
+        m_IRBuilder->SetInsertPoint(&bb);
+        m_IRBuilder->CreateRetVoid();
+    }
 }
 
 Brewer::Context& Brewer::Builder::GetContext() const

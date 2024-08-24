@@ -54,23 +54,27 @@ Brewer::ExprPtr Brewer::Parser::ParsePrimary()
         return std::make_unique<SymbolExpression>(Location, type, Value);
     }
     if (At(TokenType_Bin))
-        return std::make_unique<ConstIntExpression>(loc, m_Context.GetInt64Ty(), std::stoull(Skip().Value, nullptr, 2));
+        return std::make_unique<ConstIntExpression>(loc,
+                                                    GetContext().GetInt64Ty(),
+                                                    std::stoull(Skip().Value, nullptr, 2));
     if (At(TokenType_Oct))
-        return std::make_unique<ConstIntExpression>(loc, m_Context.GetInt64Ty(), std::stoull(Skip().Value, nullptr, 8));
+        return std::make_unique<ConstIntExpression>(loc,
+                                                    GetContext().GetInt64Ty(),
+                                                    std::stoull(Skip().Value, nullptr, 8));
     if (At(TokenType_Dec))
         return std::make_unique<ConstIntExpression>(loc,
-                                                    m_Context.GetInt64Ty(),
+                                                    GetContext().GetInt64Ty(),
                                                     std::stoull(Skip().Value, nullptr, 10));
     if (At(TokenType_Hex))
         return std::make_unique<ConstIntExpression>(loc,
-                                                    m_Context.GetInt64Ty(),
+                                                    GetContext().GetInt64Ty(),
                                                     std::stoull(Skip().Value, nullptr, 16));
     if (At(TokenType_Float))
-        return std::make_unique<ConstFloatExpression>(loc, m_Context.GetFloat64Ty(), std::stold(Skip().Value));
+        return std::make_unique<ConstFloatExpression>(loc, GetContext().GetFloat64Ty(), std::stold(Skip().Value));
     if (At(TokenType_Char))
-        return std::make_unique<ConstCharExpression>(loc, m_Context.GetInt8Ty(), Skip().Value[0]);
+        return std::make_unique<ConstCharExpression>(loc, GetContext().GetInt8Ty(), Skip().Value[0]);
     if (At(TokenType_String))
-        return std::make_unique<ConstStringExpression>(loc, m_Context.GetInt8PtrTy(), Skip().Value);
+        return std::make_unique<ConstStringExpression>(loc, GetContext().GetInt8PtrTy(), Skip().Value);
 
     const auto [Location, Type, Value] = Skip();
     return std::cerr

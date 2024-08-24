@@ -13,7 +13,7 @@ Brewer::TypePtr Brewer::Parser::ParseType()
     {
         if (!NextIfAt("{"))
         {
-            type = StructType::Get(m_Context);
+            type = StructType::Get(GetContext());
         }
         else
         {
@@ -31,7 +31,7 @@ Brewer::TypePtr Brewer::Parser::ParseType()
     else
     {
         auto [Location, Type, Value] = Expect(TokenType_Name);
-        type = m_Context.GetType(Value);
+        type = GetContext().GetType(Value);
         if (!type)
             return std::cerr
                 << "at " << Location << ": "

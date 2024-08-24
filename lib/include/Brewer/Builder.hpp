@@ -45,6 +45,10 @@ namespace Brewer
 
         Builder(Context&, const std::string& module_id, const std::string& filename);
 
+        [[nodiscard]] llvm::Function* GetGlobalCtor() const;
+        [[nodiscard]] llvm::Function* GetGlobalDtor() const;
+        void CloseGlobals() const;
+
         [[nodiscard]] Context& GetContext() const;
         [[nodiscard]] llvm::LLVMContext& IRContext() const;
         [[nodiscard]] llvm::IRBuilder<>& IRBuilder() const;
@@ -74,6 +78,8 @@ namespace Brewer
         std::unique_ptr<llvm::LLVMContext> m_IRContext;
         std::unique_ptr<llvm::IRBuilder<>> m_IRBuilder;
         std::unique_ptr<llvm::Module> m_IRModule;
+
+        llvm::Function *m_GlobalCtor, *m_GlobalDtor;
 
         std::map<std::string, BinaryFn> m_BinaryFns;
         std::map<std::string, UnaryFn> m_UnaryFns;

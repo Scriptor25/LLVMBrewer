@@ -376,10 +376,11 @@ Brewer::FunctionType::FunctionType(const std::string& name,
 
 llvm::FunctionType* Brewer::FunctionType::GenIR(Builder& builder) const
 {
-    std::vector<llvm::Type*> params((m_Self ? 1 : 0) + m_Params.size());
-    if (m_Self) params[0] = llvm::PointerType::get(builder.IRContext(), 0);
-    for (size_t i = m_Self ? 1 : 0; i < params.size(); ++i)
-        params[i] = m_Params[i]->GenIR(builder);
+    const auto off = m_Self ? 1 : 0;
+    std::vector<llvm::Type*> params(off + m_Params.size());
+    if (off) params[0] = llvm::PointerType::get(builder.IRContext(), 0);
+    for (size_t i = 0; i < params.size(); ++i)
+        params[off + i] = m_Params[i]->GenIR(builder);
     return llvm::FunctionType::get(m_Result->GenIR(builder), params, m_VarArg);
 }
 

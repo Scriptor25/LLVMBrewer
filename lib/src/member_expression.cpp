@@ -3,6 +3,8 @@
 #include <Brewer/Util.hpp>
 #include <Brewer/Value.hpp>
 
+#include "Brewer/Type.hpp"
+
 Brewer::MemberExpression::MemberExpression(const SourceLocation& loc,
                                            const TypePtr& type,
                                            ExprPtr object,
@@ -24,6 +26,9 @@ std::ostream& Brewer::MemberExpression::Dump(std::ostream& stream) const
 
 Brewer::ValuePtr Brewer::MemberExpression::GenIR(Builder& builder) const
 {
+    if (Type->IsFuncPtr())
+        return builder.GetFunction(Object->Type, MemberName);
+
     auto object = Object->GenIR(builder);
     if (!object) return {};
     if (Dereference)

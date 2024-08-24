@@ -40,12 +40,35 @@ Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
     const auto ty = type->GenIR(builder);
     if (!ty) return {};
 
-    std::vector<llvm::Value*> args(Args.size());
-    for (size_t i = 0; i < args.size(); ++i)
+    LValuePtr self;
+    if (auto self_type = type->GetSelf())
+    {
+        switch (type->GetMode())
+        {
+        case FuncMode_Ctor:
+            self = LValue::Alloca(builder, type->GetSelf(), "instance");
+            break;
+        case FuncMode_Member:
+            {
+                const auto member_callee = dynamic_cast<MemberExpression*>(Callee.get());
+                const auto object = member_callee->Object->GenIR(builder);
+                if (member_callee->Dereference) self = object->Dereference();
+                else self = std::dynamic_pointer_cast<LValue>(object);
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    const auto off = self ? 1 : 0;
+    std::vector<llvm::Value*> args(off + Args.size());
+    if (off) args[0] = self->GetPtr();
+    for (size_t i = off; i < args.size(); ++i)
     {
         auto arg = Args[i]->GenIR(builder);
         if (!arg) return {};
-        if (auto dest = type->GetParam(i))
+        if (auto dest = type->GetParam(i - off))
         {
             arg = builder.GenCast(arg, dest);
             if (!arg) return {};
@@ -60,6 +83,9 @@ Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
             << "failed to create call"
             << std::endl
             << ErrMark<ValuePtr>();
+
+    if (type->GetMode() == FuncMode_Ctor)
+        return self;
 
     return RValue::Direct(builder, type->GetResult(), result);
 }

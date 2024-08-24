@@ -194,6 +194,11 @@ bool Brewer::Type::IsFunction() const
     return m_ID == Type_Function;
 }
 
+bool Brewer::Type::IsFuncPtr() const
+{
+    return m_ID == Type_Pointer && dynamic_cast<const PointerType*>(this)->GetBase()->IsFunction();
+}
+
 Brewer::PointerTypePtr Brewer::PointerType::Get(const TypePtr& base)
 {
     const auto name = base->GetName() + "*";

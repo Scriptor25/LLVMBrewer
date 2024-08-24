@@ -33,10 +33,10 @@ namespace Brewer
     public:
         static TypePtr& Get(Context&, const std::string& name);
         static PointerTypePtr GetFunPtr(FuncMode mode,
-                                 const TypePtr& self,
-                                 const TypePtr& result,
-                                 const std::vector<TypePtr>& params,
-                                 bool vararg);
+                                        const TypePtr& self,
+                                        const TypePtr& result,
+                                        const std::vector<TypePtr>& params,
+                                        bool vararg);
 
         static TypePtr GetHigherOrder(const TypePtr&, const TypePtr&);
 
@@ -68,6 +68,8 @@ namespace Brewer
         [[nodiscard]] bool IsArray() const;
         [[nodiscard]] bool IsStruct() const;
         [[nodiscard]] bool IsFunction() const;
+
+        [[nodiscard]] bool IsFuncPtr() const;
 
     private:
         Context& m_Context;

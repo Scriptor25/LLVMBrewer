@@ -64,6 +64,20 @@ Brewer::TypePtr Brewer::Parser::ParseType()
 
         if (NextIfAt("("))
         {
+            FuncMode mode = FuncMode_Normal;
+            TypePtr self;
+
+            if (NextIfAt("+")) mode = FuncMode_Ctor;
+            else if (NextIfAt("-")) mode = FuncMode_Dtor;
+            else if (NextIfAt(":")) mode = FuncMode_Member;
+
+            if (mode != FuncMode_Normal)
+            {
+                self = ParseType();
+                Expect(")");
+                Expect("(");
+            }
+
             std::vector<TypePtr> params;
             bool vararg = false;
             while (!NextIfAt(")"))
@@ -78,7 +92,7 @@ Brewer::TypePtr Brewer::Parser::ParseType()
                 params.push_back(ParseType());
                 if (!At(")")) Expect(",");
             }
-            type = FunctionType::Get(type, params, vararg);
+            type = FunctionType::Get(mode, self, type, params, vararg);
             continue;
         }
 

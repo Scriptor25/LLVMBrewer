@@ -1,5 +1,6 @@
 #include <iostream>
 #include <Brewer/Builder.hpp>
+#include <Brewer/Context.hpp>
 #include <Brewer/Type.hpp>
 #include <Brewer/Util.hpp>
 #include <Brewer/Value.hpp>
@@ -21,20 +22,21 @@ llvm::Function* Test::Prototype::GenIR(Brewer::Builder& builder) const
         return fn;
 
     const auto type = GetType(builder.GetContext());
-    const auto fn_ty = type->GenIR(builder);
+    const auto fn_ty = llvm::cast<llvm::FunctionType>(type->GetBase()->GenIR(builder));
     const auto fn = llvm::Function::Create(fn_ty, llvm::GlobalValue::ExternalLinkage, Name, builder.IRModule());
 
     for (size_t i = 0; i < Params.size(); ++i)
         fn->getArg(i)->setName(Params[i]);
 
-    builder[Name] = Brewer::RValue::Direct(builder, Brewer::PointerType::Get(type), fn);
+    builder[Name] = Brewer::RValue::Direct(builder, type, fn);
     return fn;
 }
 
-Brewer::FunctionTypePtr Test::Prototype::GetType(Brewer::Context& context) const
+Brewer::PointerTypePtr Test::Prototype::GetType(Brewer::Context& context) const
 {
-    const std::vector params(Params.size(), Brewer::Type::Get(context, "f64"));
-    return Brewer::FunctionType::Get(Brewer::Type::Get(context, "f64"), params, false);
+    const auto flt_ty = context.GetFloat64Ty();
+    const std::vector params(Params.size(), flt_ty);
+    return Brewer::Type::GetFunPtr(Brewer::FuncMode_Normal, {}, flt_ty, params, false);
 }
 
 std::ostream& Test::operator<<(std::ostream& stream, const Prototype& proto)

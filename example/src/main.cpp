@@ -18,7 +18,7 @@ static Test::Prototype parse_proto(Brewer::Parser& parser)
         params.push_back(param);
     }
     Test::Prototype proto{Value, params};
-    parser.GetContext().GetSymbol(Value) = Brewer::PointerType::Get(proto.GetType(parser.GetContext()));
+    parser.GetContext().GetSymbol(Value) = proto.GetType(parser.GetContext());
     return proto;
 }
 

@@ -20,11 +20,23 @@ namespace Brewer
         Type_Array,
     };
 
+    enum FuncMode
+    {
+        FuncMode_Normal,
+        FuncMode_Ctor,
+        FuncMode_Dtor,
+        FuncMode_Member,
+    };
+
     class Type
     {
     public:
         static TypePtr& Get(Context&, const std::string& name);
-        static TypePtr GetFunPtr(const TypePtr& result, const std::vector<TypePtr>& params, bool vararg);
+        static PointerTypePtr GetFunPtr(FuncMode mode,
+                                 const TypePtr& self,
+                                 const TypePtr& result,
+                                 const std::vector<TypePtr>& params,
+                                 bool vararg);
 
         static TypePtr GetHigherOrder(const TypePtr&, const TypePtr&);
 
@@ -123,21 +135,29 @@ namespace Brewer
     class FunctionType : public Type
     {
     public:
-        static FunctionTypePtr Get(const TypePtr& result,
+        static FunctionTypePtr Get(FuncMode mode,
+                                   const TypePtr& self,
+                                   const TypePtr& result,
                                    const std::vector<TypePtr>& params,
                                    bool vararg);
 
         FunctionType(const std::string& name,
+                     FuncMode mode,
+                     TypePtr self,
                      TypePtr result,
                      const std::vector<TypePtr>& params,
                      bool vararg);
         llvm::FunctionType* GenIR(Builder&) const override;
 
-        TypePtr GetResult();
-        TypePtr GetParam(size_t);
+        [[nodiscard]] FuncMode GetMode() const;
+        [[nodiscard]] TypePtr GetSelf() const;
+        [[nodiscard]] TypePtr GetResult() const;
+        [[nodiscard]] TypePtr GetParam(size_t) const;
         [[nodiscard]] bool IsVarArg() const;
 
     private:
+        FuncMode m_Mode;
+        TypePtr m_Self;
         TypePtr m_Result;
         std::vector<TypePtr> m_Params;
         bool m_VarArg;

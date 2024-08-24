@@ -14,7 +14,7 @@ namespace Test
 
         std::ostream& Dump(std::ostream& stream) const;
         llvm::Function* GenIR(Brewer::Builder& builder) const;
-        [[nodiscard]] Brewer::FunctionTypePtr GetType(Brewer::Context&) const;
+        [[nodiscard]] Brewer::PointerTypePtr GetType(Brewer::Context&) const;
 
         std::string Name;
         std::vector<std::string> Params;

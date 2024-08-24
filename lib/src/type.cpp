@@ -10,9 +10,13 @@ Brewer::TypePtr& Brewer::Type::Get(Context& context, const std::string& name)
     return context.GetType(name);
 }
 
-Brewer::TypePtr Brewer::Type::GetFunPtr(const TypePtr& result, const std::vector<TypePtr>& params, const bool vararg)
+Brewer::PointerTypePtr Brewer::Type::GetFunPtr(const FuncMode mode,
+                                               const TypePtr& self,
+                                               const TypePtr& result,
+                                               const std::vector<TypePtr>& params,
+                                               const bool vararg)
 {
-    return PointerType::Get(FunctionType::Get(result, params, vararg));
+    return PointerType::Get(FunctionType::Get(mode, self, result, params, vararg));
 }
 
 Brewer::TypePtr Brewer::Type::GetHigherOrder(const TypePtr& a, const TypePtr& b)
@@ -308,11 +312,35 @@ Brewer::TypePtr Brewer::StructType::GetElement(const std::string& name, size_t& 
     return {};
 }
 
-Brewer::FunctionTypePtr Brewer::FunctionType::Get(const TypePtr& result,
+Brewer::FunctionTypePtr Brewer::FunctionType::Get(const FuncMode mode,
+                                                  const TypePtr& self,
+                                                  const TypePtr& result,
                                                   const std::vector<TypePtr>& params,
                                                   const bool vararg)
 {
-    std::string name = result->GetName() + '(';
+    std::string name = result->GetName();
+    if (self)
+    {
+        name += '(';
+        switch (mode)
+        {
+        case FuncMode_Ctor:
+            name += '+';
+            break;
+        case FuncMode_Dtor:
+            name += '-';
+            break;
+        case FuncMode_Member:
+            name += ':';
+            break;
+        default:
+            name += '?';
+            break;
+        }
+        name += self->GetName();
+        name += ')';
+    }
+    name += '(';
     for (size_t i = 0; i < params.size(); ++i)
     {
         if (i > 0) name += ',';
@@ -327,15 +355,19 @@ Brewer::FunctionTypePtr Brewer::FunctionType::Get(const TypePtr& result,
     name += ')';
     auto& type = Type::Get(result->GetContext(), name);
     if (!type)
-        type = std::make_shared<FunctionType>(name, result, params, vararg);
+        type = std::make_shared<FunctionType>(name, mode, self, result, params, vararg);
     return std::dynamic_pointer_cast<FunctionType>(type);
 }
 
 Brewer::FunctionType::FunctionType(const std::string& name,
+                                   const FuncMode mode,
+                                   TypePtr self,
                                    TypePtr result,
                                    const std::vector<TypePtr>& params,
                                    const bool vararg)
     : Type(result->GetContext(), name, Type_Function, 0),
+      m_Mode(mode),
+      m_Self(std::move(self)),
       m_Result(std::move(result)),
       m_Params(params),
       m_VarArg(vararg)
@@ -350,12 +382,22 @@ llvm::FunctionType* Brewer::FunctionType::GenIR(Builder& builder) const
     return llvm::FunctionType::get(m_Result->GenIR(builder), params, m_VarArg);
 }
 
-Brewer::TypePtr Brewer::FunctionType::GetResult()
+Brewer::FuncMode Brewer::FunctionType::GetMode() const
+{
+    return m_Mode;
+}
+
+Brewer::TypePtr Brewer::FunctionType::GetSelf() const
+{
+    return m_Self;
+}
+
+Brewer::TypePtr Brewer::FunctionType::GetResult() const
 {
     return m_Result;
 }
 
-Brewer::TypePtr Brewer::FunctionType::GetParam(const size_t i)
+Brewer::TypePtr Brewer::FunctionType::GetParam(const size_t i) const
 {
     if (i >= m_Params.size() && m_VarArg) return {};
     return m_Params[i];

@@ -29,6 +29,7 @@ namespace Brewer
     class RValue : public Value
     {
     public:
+        static RValuePtr From(const ValuePtr&);
         static RValuePtr Direct(Builder&, const TypePtr& type, llvm::Value* value);
 
         RValue(Builder&, const TypePtr& type, llvm::Value* value);
@@ -42,6 +43,7 @@ namespace Brewer
     class LValue : public Value
     {
     public:
+        static LValuePtr From(const ValuePtr&);
         static LValuePtr Alloca(Builder&, const TypePtr& type, const std::string& name = "");
         static LValuePtr Direct(Builder&, const TypePtr& type, llvm::Value* ptr);
 

@@ -39,7 +39,7 @@ Brewer::LValuePtr Brewer::Value::Dereference() const
 {
     if (!m_Builder)
         return std::cerr << "empty value" << std::endl << ErrMark<LValuePtr>();
-    if (const auto type = std::dynamic_pointer_cast<PointerType>(m_Type))
+    if (const auto type = PointerType::From(m_Type))
         return LValue::Direct(*m_Builder, type->GetBase(), Get());
     return std::cerr
         << "cannot dereference non pointer type " << m_Type->GetName()
@@ -50,6 +50,11 @@ Brewer::LValuePtr Brewer::Value::Dereference() const
 llvm::Value* Brewer::Value::Get() const
 {
     return nullptr;
+}
+
+Brewer::RValuePtr Brewer::RValue::From(const ValuePtr& value)
+{
+    return std::dynamic_pointer_cast<RValue>(value);
 }
 
 Brewer::RValuePtr Brewer::RValue::Direct(Builder& builder, const TypePtr& type, llvm::Value* value)
@@ -65,6 +70,11 @@ Brewer::RValue::RValue(Builder& builder, const TypePtr& type, llvm::Value* value
 llvm::Value* Brewer::RValue::Get() const
 {
     return m_Value;
+}
+
+Brewer::LValuePtr Brewer::LValue::From(const ValuePtr& value)
+{
+    return std::dynamic_pointer_cast<LValue>(value);
 }
 
 Brewer::LValuePtr Brewer::LValue::Alloca(Builder& builder, const TypePtr& type, const std::string& name)

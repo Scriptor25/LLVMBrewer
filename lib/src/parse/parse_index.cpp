@@ -22,8 +22,8 @@ Brewer::ExprPtr Brewer::Parser::ParseIndex(ExprPtr base)
         Expect("]");
 
         TypePtr element;
-        if (const auto type = std::dynamic_pointer_cast<PointerType>(base->Type)) element = type->GetBase();
-        if (const auto type = std::dynamic_pointer_cast<ArrayType>(base->Type)) element = type->GetBase();
+        if (const auto type = PointerType::From(base->Type)) element = type->GetBase();
+        if (const auto type = ArrayType::From(base->Type)) element = type->GetBase();
         base = std::make_unique<IndexExpression>(Location, element, std::move(base), std::move(index));
     }
 

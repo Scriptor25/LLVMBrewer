@@ -1,13 +1,18 @@
 #include <Brewer/Builder.hpp>
 #include <Brewer/Type.hpp>
 
+Brewer::PointerTypePtr Brewer::PointerType::From(const TypePtr& type)
+{
+    return std::dynamic_pointer_cast<PointerType>(type);
+}
+
 Brewer::PointerTypePtr Brewer::PointerType::Get(const TypePtr& base)
 {
     const auto name = base->GetName() + "*";
     auto& type = Type::Get(base->GetContext(), name);
     if (!type)
         type = std::make_shared<PointerType>(name, base);
-    return std::dynamic_pointer_cast<PointerType>(type);
+    return From(type);
 }
 
 Brewer::PointerType::PointerType(const std::string& name, const TypePtr& base)

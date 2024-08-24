@@ -37,7 +37,7 @@ Brewer::ValuePtr Brewer::MemberExpression::GenIR(Builder& builder) const
         if (!object) return {};
     }
 
-    const auto l_object = std::dynamic_pointer_cast<LValue>(object);
+    const auto l_object = LValue::From(object);
     if (!l_object)
         return std::cerr
             << "at " << Location << ": "

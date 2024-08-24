@@ -6,6 +6,11 @@ Brewer::StructElement::StructElement(TypePtr type, std::string name)
 {
 }
 
+Brewer::StructTypePtr Brewer::StructType::From(const TypePtr& type)
+{
+    return std::dynamic_pointer_cast<StructType>(type);
+}
+
 Brewer::StructTypePtr Brewer::StructType::Get(const std::vector<StructElement>& elements)
 {
     std::string name;
@@ -21,7 +26,7 @@ Brewer::StructTypePtr Brewer::StructType::Get(const std::vector<StructElement>& 
     auto& type = Type::Get(elements[0].Type->GetContext(), name);
     if (!type)
         type = std::make_shared<StructType>(elements[0].Type->GetContext(), name, size, elements);
-    return std::dynamic_pointer_cast<StructType>(type);
+    return From(type);
 }
 
 Brewer::StructTypePtr Brewer::StructType::Get(Context& context)
@@ -31,7 +36,7 @@ Brewer::StructTypePtr Brewer::StructType::Get(Context& context)
     auto& type = Type::Get(context, name);
     if (!type)
         type = std::make_shared<StructType>(context, name, 0, std::vector<StructElement>());
-    return std::dynamic_pointer_cast<StructType>(type);
+    return From(type);
 }
 
 Brewer::StructType::StructType(Context& context,

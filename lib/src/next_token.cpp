@@ -87,17 +87,15 @@ void Brewer::Parser::Escape()
         }
         break;
     default:
+        if (is_oct_digit(m_CC))
         {
-            if (is_oct_digit(m_CC))
-            {
-                std::string value;
-                value += static_cast<char>(m_CC);
-                m_CC = Get();
-                value += static_cast<char>(m_CC);
-                m_CC = Get();
-                value += static_cast<char>(m_CC);
-                m_CC = std::stoi(value, nullptr, 8);
-            }
+            std::string value;
+            value += static_cast<char>(m_CC);
+            m_CC = Get();
+            value += static_cast<char>(m_CC);
+            m_CC = Get();
+            value += static_cast<char>(m_CC);
+            m_CC = std::stoi(value, nullptr, 8);
         }
         break;
     }

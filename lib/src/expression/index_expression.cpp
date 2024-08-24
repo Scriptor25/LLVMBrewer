@@ -20,25 +20,17 @@ Brewer::ValuePtr Brewer::IndexExpression::GenIR(Builder& builder) const
     const auto index = Index->GenIR(builder);
     const auto e_ty = Type->GenIR(builder);
 
-    if (Base->Type->IsPointer())
+    if (PointerType::From(Base->Type))
     {
-        const auto ptr_type = std::dynamic_pointer_cast<PointerType>(Base->Type);
-
-        llvm::Value* ptr;
-        if (const auto b = std::dynamic_pointer_cast<LValue>(base)) ptr = b->GetPtr();
-        else ptr = base->Get();
-
-        const auto gep = builder.IRBuilder().CreateGEP(e_ty, ptr, {index->Get()});
+        const auto gep = builder.IRBuilder().CreateGEP(e_ty, base->Get(), {index->Get()});
         return LValue::Direct(builder, Type, gep);
     }
 
-    if (Base->Type->IsArray())
+    if (const auto type = ArrayType::From(Base->Type))
     {
-        const auto arr_type = std::dynamic_pointer_cast<ArrayType>(Base->Type);
-        const auto ty = arr_type->GenIR(builder);
+        const auto ty = type->GenIR(builder);
 
-        const auto ptr = std::dynamic_pointer_cast<LValue>(base)->GetPtr();
-
+        const auto ptr = LValue::From(base)->GetPtr();
         const auto gep = builder.IRBuilder().CreateGEP(ty, ptr, {builder.IRBuilder().getInt64(0), index->Get()});
         return LValue::Direct(builder, Type, gep);
     }

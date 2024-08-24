@@ -32,7 +32,7 @@ Brewer::ValuePtr Brewer::UnaryExpression::GenIR(Builder& builder) const
         {
             if (assign)
             {
-                if (auto dest = std::dynamic_pointer_cast<LValue>(operand))
+                if (auto dest = LValue::From(operand))
                 {
                     llvm::Value* pre;
                     if (!LH) pre = dest->Get();

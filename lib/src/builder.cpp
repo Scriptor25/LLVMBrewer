@@ -139,8 +139,7 @@ Brewer::ValuePtr Brewer::Builder::GetCtor(const TypePtr& type)
 {
     for (const auto& [self, func] : m_Functions[{}])
     {
-        const auto ptr_type = std::dynamic_pointer_cast<PointerType>(func->GetType());
-        const auto fun_type = std::dynamic_pointer_cast<FunctionType>(ptr_type->GetBase());
+        const auto fun_type = FunctionType::From(PointerType::From(func->GetType())->GetBase());
         if (fun_type->GetMode() != FuncMode_Ctor) continue;
         if (fun_type->GetSelf() != type) continue;
         return func;

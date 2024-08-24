@@ -1,6 +1,11 @@
 #include <Brewer/Builder.hpp>
 #include <Brewer/Type.hpp>
 
+Brewer::FunctionTypePtr Brewer::FunctionType::From(const TypePtr& type)
+{
+    return std::dynamic_pointer_cast<FunctionType>(type);
+}
+
 Brewer::FunctionTypePtr Brewer::FunctionType::Get(const FuncMode mode,
                                                   const TypePtr& self,
                                                   const TypePtr& result,
@@ -45,7 +50,7 @@ Brewer::FunctionTypePtr Brewer::FunctionType::Get(const FuncMode mode,
     auto& type = Type::Get(result->GetContext(), name);
     if (!type)
         type = std::make_shared<FunctionType>(name, mode, self, result, params, vararg);
-    return std::dynamic_pointer_cast<FunctionType>(type);
+    return From(type);
 }
 
 Brewer::FunctionType::FunctionType(const std::string& name,

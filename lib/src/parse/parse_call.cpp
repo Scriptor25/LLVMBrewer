@@ -29,9 +29,7 @@ Brewer::ExprPtr Brewer::Parser::ParseCall(ExprPtr callee)
                 Expect(",");
         }
 
-        auto type = std::dynamic_pointer_cast<FunctionType>(
-            std::dynamic_pointer_cast<PointerType>(callee->Type)->GetBase())->GetResult();
-
+        auto type = FunctionType::From(PointerType::From(callee->Type)->GetBase())->GetResult();
         callee = std::make_unique<CallExpression>(Location, type, std::move(callee), args);
     }
 

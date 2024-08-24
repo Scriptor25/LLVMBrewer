@@ -30,7 +30,7 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
 
     if (Operator == "=")
     {
-        if (auto dest = std::dynamic_pointer_cast<LValue>(lhs))
+        if (auto dest = LValue::From(lhs))
         {
             const auto src = builder.GenCast(rhs, lhs->GetType());
             dest->Set(src->Get());
@@ -77,7 +77,7 @@ Brewer::ValuePtr Brewer::BinaryExpression::GenIR(Builder& builder) const
         {
             if (const auto result = fn(builder, l, r, {}))
             {
-                if (auto dest = std::dynamic_pointer_cast<LValue>(lhs))
+                if (auto dest = LValue::From(lhs))
                 {
                     const auto src = builder.GenCast(result, lhs->GetType());
                     dest->Set(src->Get());

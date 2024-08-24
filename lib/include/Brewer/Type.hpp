@@ -81,6 +81,7 @@ namespace Brewer
     class PointerType : public Type
     {
     public:
+        static PointerTypePtr From(const TypePtr&);
         static PointerTypePtr Get(const TypePtr& base);
 
         PointerType(const std::string& name, const TypePtr& base);
@@ -95,6 +96,7 @@ namespace Brewer
     class ArrayType : public Type
     {
     public:
+        static ArrayTypePtr From(const TypePtr&);
         static ArrayTypePtr Get(const TypePtr& base, size_t length);
 
         ArrayType(const std::string& name, const TypePtr& base, size_t length);
@@ -120,6 +122,7 @@ namespace Brewer
     class StructType : public Type
     {
     public:
+        static StructTypePtr From(const TypePtr&);
         static StructTypePtr Get(const std::vector<StructElement>& elements);
         static StructTypePtr Get(Context&);
 
@@ -137,6 +140,7 @@ namespace Brewer
     class FunctionType : public Type
     {
     public:
+        static FunctionTypePtr From(const TypePtr&);
         static FunctionTypePtr Get(FuncMode mode,
                                    const TypePtr& self,
                                    const TypePtr& result,

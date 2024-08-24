@@ -26,10 +26,7 @@ Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
     const auto callee = Callee->GenIR(builder);
     if (!callee) return {};
 
-    const auto type =
-        std::dynamic_pointer_cast<FunctionType>(
-            std::dynamic_pointer_cast<PointerType>(
-                callee->GetType())->GetBase());
+    const auto type = FunctionType::From(PointerType::From(callee->GetType())->GetBase());
     if (!type)
         return std::cerr
             << "at " << Location << ": "
@@ -53,7 +50,7 @@ Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
                 const auto member_callee = dynamic_cast<MemberExpression*>(Callee.get());
                 const auto object = member_callee->Object->GenIR(builder);
                 if (member_callee->Dereference) self = object->Dereference();
-                else self = std::dynamic_pointer_cast<LValue>(object);
+                else self = LValue::From(object);
             }
             break;
         default:

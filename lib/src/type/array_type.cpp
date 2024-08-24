@@ -1,12 +1,17 @@
 #include <Brewer/Type.hpp>
 
+Brewer::ArrayTypePtr Brewer::ArrayType::From(const TypePtr& type)
+{
+    return std::dynamic_pointer_cast<ArrayType>(type);
+}
+
 Brewer::ArrayTypePtr Brewer::ArrayType::Get(const TypePtr& base, const size_t length)
 {
     auto name = base->GetName() + '[' + std::to_string(length) + ']';
     auto& type = Type::Get(base->GetContext(), name);
     if (!type)
         type = std::make_shared<ArrayType>(name, base, length);
-    return std::dynamic_pointer_cast<ArrayType>(type);
+    return From(type);
 }
 
 Brewer::ArrayType::ArrayType(const std::string& name, const TypePtr& base, const size_t length)

@@ -25,15 +25,8 @@ Brewer::ExprPtr Brewer::Parser::ParseMember(ExprPtr object)
 
         StructTypePtr struct_type;
 
-        if (dereference)
-        {
-            const auto ptr_type = std::dynamic_pointer_cast<PointerType>(object->Type);
-            struct_type = std::dynamic_pointer_cast<StructType>(ptr_type->GetBase());
-        }
-        else
-        {
-            struct_type = std::dynamic_pointer_cast<StructType>(object->Type);
-        }
+        if (dereference) struct_type = StructType::From(PointerType::From(object->Type)->GetBase());
+        else struct_type = StructType::From(object->Type);
 
         type = struct_type->GetElement(member, index);
         if (!type)

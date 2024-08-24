@@ -57,9 +57,10 @@ namespace Brewer
         ValuePtr& GetFunction(const TypePtr&, const std::string&);
         ValuePtr GetCtor(const TypePtr&);
 
+        ValuePtr& GetSymbol(const std::string& name);
+
         void Push();
         void Pop();
-        ValuePtr& GetSymbol(const std::string& name);
 
         ValuePtr GenCast(const ValuePtr& src, const TypePtr& dst);
 

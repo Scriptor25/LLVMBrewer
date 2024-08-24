@@ -34,8 +34,17 @@ Brewer::ExprPtr Brewer::Parser::ParsePrimary()
     if (At(TokenType_Name))
     {
         auto [Location, Type, Value] = Skip();
-        auto type = m_Context.GetSymbol(Value);
-        if (!type) type = m_Context.GetFunction({}, Value);
+
+        TypePtr type;
+        {
+            const auto symbol = m_Builder.GetSymbol(Value);
+            type = symbol ? symbol->GetType() : nullptr;
+        }
+        if (!type)
+        {
+            const auto func = m_Builder.GetFunction({}, Value);
+            type = func ? func->GetType() : nullptr;
+        }
         if (!type)
             return std::cerr
                 << "at " << Location << ": "

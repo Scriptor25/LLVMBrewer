@@ -1,8 +1,9 @@
 #include <Brewer/AST.hpp>
-#include <Brewer/Context.hpp>
+#include <Brewer/Builder.hpp>
 #include <Brewer/Parser.hpp>
 #include <Brewer/Type.hpp>
 #include <Brewer/Util.hpp>
+#include <Brewer/Value.hpp>
 
 Brewer::ExprPtr Brewer::Parser::ParseMember()
 {
@@ -35,7 +36,11 @@ Brewer::ExprPtr Brewer::Parser::ParseMember(ExprPtr object)
         }
 
         type = struct_type->GetElement(member, index);
-        if (!type) type = m_Context.GetFunction(struct_type, member);
+        if (!type)
+        {
+            const auto func = m_Builder.GetFunction(struct_type, member);
+            type = func ? func->GetType() : nullptr;
+        }
         if (!type)
             return std::cerr
                 << "at " << Location << ": "

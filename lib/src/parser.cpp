@@ -15,6 +15,11 @@ Brewer::Context& Brewer::Parser::GetContext() const
     return m_Context;
 }
 
+Brewer::Builder& Brewer::Parser::GetBuilder() const
+{
+    return m_Builder;
+}
+
 Brewer::StmtFn& Brewer::Parser::ParseStmtFn(const std::string& beg)
 {
     return m_StmtFnMap[beg];

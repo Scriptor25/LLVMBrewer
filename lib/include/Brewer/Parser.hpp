@@ -16,6 +16,7 @@ namespace Brewer
         Parser(Builder&, std::istream& stream, const std::string& filename);
 
         [[nodiscard]] Context& GetContext() const;
+        [[nodiscard]] Builder& GetBuilder() const;
 
         StmtFn& ParseStmtFn(const std::string&);
         ExprFn& ParseExprFn(const std::string&);

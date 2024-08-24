@@ -1,11 +1,12 @@
 #include <filesystem>
 #include <fstream>
+#include <Brewer/Builder.hpp>
+#include <Brewer/Context.hpp>
 #include <Brewer/Parser.hpp>
 #include <Brewer/Pipeline.hpp>
+#include <Brewer/Type.hpp>
+#include <Brewer/Value.hpp>
 #include <Test/AST.hpp>
-
-#include "Brewer/Context.hpp"
-#include "Brewer/Type.hpp"
 
 static Test::Prototype parse_proto(Brewer::Parser& parser)
 {
@@ -17,8 +18,11 @@ static Test::Prototype parse_proto(Brewer::Parser& parser)
         auto param = parser.Expect(Brewer::TokenType_Name).Value;
         params.push_back(param);
     }
+
     Test::Prototype proto{Value, params};
-    parser.GetContext().GetSymbol(Value) = proto.GetType(parser.GetContext());
+
+    parser.GetBuilder().GetFunction({}, Value)
+        = Brewer::RValue::Empty(parser.GetBuilder(), proto.GetType(parser.GetContext()));
     return proto;
 }
 
@@ -26,11 +30,12 @@ static Brewer::StmtPtr parse_def(Brewer::Parser& parser)
 {
     auto [Location, Type, Value] = parser.Expect("def");
     auto proto = parse_proto(parser);
-    parser.GetContext().Push();
+    parser.GetBuilder().Push();
     for (auto& param : proto.Params)
-        parser.GetContext().GetSymbol(param) = parser.GetContext().GetFloat64Ty();
+        parser.GetBuilder().GetSymbol(param) = Brewer::RValue::Empty(parser.GetBuilder(),
+                                                                     parser.GetContext().GetFloat64Ty());
     auto body = parser.ParseExpr();
-    parser.GetContext().Pop();
+    parser.GetBuilder().Pop();
     if (!body) return {};
     return std::make_unique<Test::DefStatement>(Location, proto, std::move(body));
 }

@@ -779,6 +779,11 @@ Brewer::ValuePtr Brewer::Builder::GetCtor(const TypePtr& type)
     return {};
 }
 
+Brewer::ValuePtr& Brewer::Builder::GetSymbol(const std::string& name)
+{
+    return m_Symbols[name];
+}
+
 void Brewer::Builder::Push()
 {
     m_Stack.push_back(m_Symbols);
@@ -788,11 +793,6 @@ void Brewer::Builder::Pop()
 {
     m_Symbols = m_Stack.back();
     m_Stack.pop_back();
-}
-
-Brewer::ValuePtr& Brewer::Builder::GetSymbol(const std::string& name)
-{
-    return m_Symbols[name];
 }
 
 Brewer::ValuePtr Brewer::Builder::GenCast(const ValuePtr& src, const TypePtr& dst)

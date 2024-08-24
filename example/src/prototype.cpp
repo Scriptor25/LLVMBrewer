@@ -19,7 +19,7 @@ std::ostream& Test::Prototype::Dump(std::ostream& stream) const
 llvm::Function* Test::Prototype::GenIR(Brewer::Builder& builder) const
 {
     auto& ref = builder.GetFunction({}, Name);
-    if (ref) return llvm::cast<llvm::Function>(ref->Get());
+    if (ref && ref->Get()) return llvm::cast<llvm::Function>(ref->Get());
 
     const auto type = GetType(builder.GetContext());
     const auto fn_ty = llvm::cast<llvm::FunctionType>(type->GetBase()->GenIR(builder));

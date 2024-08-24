@@ -840,7 +840,7 @@ Brewer::ValuePtr Brewer::Builder::GenCast(const ValuePtr& src, const TypePtr& ds
 
     if (!result)
         return std::cerr
-            << "cannot cast from " << src_type << " to " << dst
+            << "cannot cast from " << src_type->GetName() << " to " << dst->GetName()
             << std::endl
             << ErrMark<ValuePtr>();
 

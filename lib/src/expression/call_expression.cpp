@@ -23,10 +23,32 @@ std::ostream& Brewer::CallExpression::Dump(std::ostream& stream) const
 
 Brewer::ValuePtr Brewer::CallExpression::GenIR(Builder& builder) const
 {
+    TypePtr self_type;
+    std::string callee_name;
+
+    if (const auto symbol_callee = dynamic_cast<SymbolExpression*>(Callee.get()))
+    {
+        callee_name = symbol_callee->Name;
+    }
+    else if (const auto member_callee = dynamic_cast<MemberExpression*>(Callee.get()))
+    {
+        const auto& object = member_callee->Object;
+        self_type = object->Type;
+        if (member_callee->Dereference)
+            self_type = PointerType::From(self_type)->GetBase();
+        callee_name = member_callee->MemberName;
+    }
+
+    std::vector<TypePtr> arg_types;
+    for (const auto& arg : Args)
+        arg_types.push_back(arg->Type);
+
+    const auto& callee = builder.GetFunction(self_type, callee_name, arg_types);
+
     const auto callee = Callee->GenIR(builder);
     if (!callee) return {};
 
-    const auto type = FunctionType::From(PointerType::From(callee->GetType())->GetBase());
+    const auto type = FunctionType::FromPtr(callee->GetType());
     if (!type)
         return std::cerr
             << "at " << Location << ": "

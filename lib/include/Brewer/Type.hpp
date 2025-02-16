@@ -78,6 +78,8 @@ namespace Brewer
         size_t m_Size;
     };
 
+    size_t TypeDiff(const TypePtr&, const TypePtr&, bool exact = true);
+
     class PointerType : public Type
     {
     public:
@@ -141,6 +143,7 @@ namespace Brewer
     {
     public:
         static FunctionTypePtr From(const TypePtr&);
+        static FunctionTypePtr FromPtr(const TypePtr&);
         static FunctionTypePtr Get(FuncMode mode,
                                    const TypePtr& self,
                                    const TypePtr& result,
@@ -158,6 +161,7 @@ namespace Brewer
         [[nodiscard]] FuncMode GetMode() const;
         [[nodiscard]] TypePtr GetSelf() const;
         [[nodiscard]] TypePtr GetResult() const;
+        [[nodiscard]] size_t GetParamCount() const;
         [[nodiscard]] TypePtr GetParam(size_t) const;
         [[nodiscard]] bool IsVarArg() const;
 

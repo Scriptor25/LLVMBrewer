@@ -142,3 +142,59 @@ bool Brewer::Type::IsFuncPtr() const
 {
     return m_ID == Type_Pointer && dynamic_cast<const PointerType*>(this)->GetBase()->IsFunction();
 }
+
+size_t Brewer::TypeDiff(const TypePtr& lhs, const TypePtr& rhs, const bool exact)
+{
+    if (lhs == rhs)
+        return 0;
+
+    if (lhs->IsPointer() && rhs->IsPointer())
+    {
+        if (exact)
+            return TypeDiff(lhs, rhs, exact);
+        return 1;
+    }
+
+    if (lhs->IsArray() || rhs->IsArray()
+        || lhs->IsStruct() || rhs->IsStruct()
+        || lhs->IsFunction() || rhs->IsFunction())
+        return 1000;
+
+    if (lhs->GetID() == rhs->GetID())
+    {
+        const auto l_size = lhs->GetSize();
+        const auto r_size = rhs->GetSize();
+        return l_size < r_size
+                   ? r_size - l_size
+                   : l_size - r_size;
+    }
+
+    if ((lhs->IsPointer() || rhs->IsPointer()) && (lhs->IsInt() || rhs->IsInt()))
+    {
+        const auto l_size = lhs->GetSize();
+        const auto r_size = rhs->GetSize();
+        return (l_size < r_size
+                    ? r_size - l_size
+                    : l_size - r_size) * 2;
+    }
+
+    if (lhs->IsInt() && rhs->IsFloat())
+    {
+        const auto l_size = lhs->GetSize();
+        const auto r_size = rhs->GetSize();
+        return (l_size < r_size
+                    ? r_size - l_size
+                    : l_size - r_size) * 2;
+    }
+
+    if (lhs->IsFloat() && rhs->IsInt())
+    {
+        const auto l_size = lhs->GetSize();
+        const auto r_size = rhs->GetSize();
+        return (l_size < r_size
+                    ? r_size - l_size
+                    : l_size - r_size) * 3;
+    }
+
+    return 1000;
+}

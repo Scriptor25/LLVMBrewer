@@ -6,6 +6,11 @@ Brewer::FunctionTypePtr Brewer::FunctionType::From(const TypePtr& type)
     return std::dynamic_pointer_cast<FunctionType>(type);
 }
 
+Brewer::FunctionTypePtr Brewer::FunctionType::FromPtr(const TypePtr& type)
+{
+    return From(PointerType::From(type)->GetBase());
+}
+
 Brewer::FunctionTypePtr Brewer::FunctionType::Get(const FuncMode mode,
                                                   const TypePtr& self,
                                                   const TypePtr& result,
@@ -91,6 +96,11 @@ Brewer::TypePtr Brewer::FunctionType::GetSelf() const
 Brewer::TypePtr Brewer::FunctionType::GetResult() const
 {
     return m_Result;
+}
+
+size_t Brewer::FunctionType::GetParamCount() const
+{
+    return m_Params.size();
 }
 
 Brewer::TypePtr Brewer::FunctionType::GetParam(const size_t i) const

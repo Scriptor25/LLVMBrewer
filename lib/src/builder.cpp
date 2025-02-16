@@ -168,22 +168,68 @@ void Brewer::Builder::EmitToFile(const std::string& filename) const
     dest.flush();
 }
 
-Brewer::ValuePtr& Brewer::Builder::GetFunction(const TypePtr& self, const std::string& name)
+Brewer::ValuePtr& Brewer::Builder::GetFunction(const TypePtr& self,
+                                               const std::string& name,
+                                               const std::vector<TypePtr>& args)
 {
-    return m_Functions[self][name];
-}
+    size_t lowest_diff = 0;
+    ValuePtr* result = nullptr;
 
-Brewer::ValuePtr Brewer::Builder::GetCtor(const TypePtr& type)
-{
-    for (const auto& [self, func] : m_Functions[{}])
+    for (auto& func : m_Functions[self][name])
     {
-        const auto fun_type = FunctionType::From(PointerType::From(func->GetType())->GetBase());
-        if (fun_type->GetMode() != FuncMode_Ctor) continue;
-        if (fun_type->GetSelf() != type) continue;
-        return func;
+        const auto fn_type = FunctionType::FromPtr(func->GetType());
+        if (args.size() < fn_type->GetParamCount()) continue;
+        if (args.size() > fn_type->GetParamCount() && !fn_type->IsArray()) continue;
+        size_t diff = 0;
+        for (size_t i = 0; i < fn_type->GetParamCount(); ++i)
+            diff += TypeDiff(args[i], fn_type->GetParam(i), false);
+        if (diff < lowest_diff)
+        {
+            lowest_diff = diff;
+            result = &func;
+        }
     }
 
-    return {};
+    if (!result)
+    {
+        result = &m_Functions[self][name].back();
+        if (*result) result = &m_Functions[self][name].emplace_back();
+    }
+    return *result;
+}
+
+Brewer::ValuePtr Brewer::Builder::GetFunction(const TypePtr& self, const std::string& name)
+{
+    const auto type = Type::GetFunPtr(self ? FuncMode_Member : FuncMode_Normal, self, {}, {}, false);
+    return Value::Empty(type);
+}
+
+Brewer::ValuePtr Brewer::Builder::GetCtor(const TypePtr& type, const std::vector<TypePtr>& args)
+{
+    size_t lowest_diff = 0;
+    ValuePtr result;
+
+    for (const auto& ctor : m_Constructors[type])
+    {
+        const auto fn_type = FunctionType::FromPtr(ctor->GetType());
+        if (args.size() < fn_type->GetParamCount()) continue;
+        if (args.size() > fn_type->GetParamCount() && !fn_type->IsArray()) continue;
+        size_t diff = 0;
+        for (size_t i = 0; i < fn_type->GetParamCount(); ++i)
+            diff += TypeDiff(fn_type->GetParam(i), args[i], false);
+        if (diff < lowest_diff)
+        {
+            lowest_diff = diff;
+            result = ctor;
+        }
+    }
+
+    return result;
+}
+
+Brewer::ValuePtr Brewer::Builder::GetDtor(const TypePtr& type)
+{
+    return m_Destructors[type];
 }
 
 Brewer::ValuePtr& Brewer::Builder::GetSymbol(const std::string& name)

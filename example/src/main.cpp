@@ -23,7 +23,8 @@ static Test::Prototype parse_proto(Parser& parser)
 
     Test::Prototype proto{Value, params};
 
-    parser.GetBuilder().GetFunction({}, Value) = Value::Empty(proto.GetType(parser.GetContext()));
+    parser.GetBuilder().GetFunction({}, Value, std::vector(params.size(), parser.GetContext().GetFloat64Ty())) =
+        Value::Empty(proto.GetType(parser.GetContext()));
     return proto;
 }
 

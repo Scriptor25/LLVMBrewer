@@ -20,11 +20,11 @@ std::ostream& Test::Prototype::Dump(std::ostream& stream) const
 
 llvm::Function* Test::Prototype::GenIR(Builder& builder) const
 {
-    auto& ref = builder.GetFunction({}, Name);
+    auto& ref = builder.GetFunction({}, Name, std::vector(Params.size(), builder.GetContext().GetFloat64Ty()));
     if (ref && ref->Get()) return llvm::cast<llvm::Function>(ref->Get());
 
-    const auto type = GetType(builder.GetContext());
-    const auto fn_ty = llvm::cast<llvm::FunctionType>(type->GetBase()->GenIR(builder));
+    const auto type = FunctionType::FromPtr(GetType(builder.GetContext()));
+    const auto fn_ty = type->GenIR(builder);
     const auto fn = llvm::Function::Create(fn_ty, llvm::GlobalValue::ExternalLinkage, Name, builder.IRModule());
 
     for (size_t i = 0; i < Params.size(); ++i)
